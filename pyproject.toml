@@ -16,9 +16,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mypy>=1.19.0",
     "ruff>=0.12.10",
 ]
 
 [tool.ruff]
 line-length = 80
 lint.ignore = ["E722"]
+
+[[tool.mypy.overrides]]
+module = ["yaml.*"]
+follow_untyped_imports = true
