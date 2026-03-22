@@ -4,7 +4,7 @@
 import numba
 import pygame as pg
 import numpy as np
-import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
 # Constants and algorithm parameters
 
@@ -205,10 +205,32 @@ class WaterRipples:
         mx, my = event.pos
 
         if self.render_mode == "trapezoid":
-            # To implement
-            # For now, just handle the same as for the other render modes
-            grid_x = mx // self.grid_cell_width
-            grid_y = my // self.grid_cell_height
+            if my < self.trapezoid["y_top"] or my > self.trapezoid["y_bottom"]:
+                return
+            # Invert vertical scaling to find grid_y
+            y_top = self.trapezoid["y_top"]
+            y_bottom = self.trapezoid["y_bottom"]
+
+            # Normalize my into the vertical space _compute_vertical_scaling operates in
+            scaled_grid_cell_height = self.grid_cell_height * (
+                self.normalized_trapezoid["y_bottom"] - self.normalized_trapezoid["y_top"]
+            )
+            y_adjusted = (my - y_top) / scaled_grid_cell_height
+            grid_y = int(self._inverse_vertical_scaling(y_adjusted=y_adjusted))
+            grid_y = max(0, min(grid_y, self.number_of_rows - 1))
+
+            # Use grid_y to find the x boundaries of that row, then interpolate grid_x
+            y_adj = self._compute_vertical_scaling(y=grid_y)
+            x_left = self.trapezoid["x_top_left"] + (
+                self.normalized_trapezoid["x_bottom_left"] - self.normalized_trapezoid["x_top_left"]
+            ) * y_adj * (self.window_height / self.number_of_rows)
+            x_right = self.trapezoid["x_top_right"] + (
+                self.normalized_trapezoid["x_bottom_right"] - self.normalized_trapezoid["x_top_right"]
+            ) * y_adj * (self.window_height / self.number_of_rows)
+
+            # Interpolate x within that row
+            grid_x = int((mx - x_left) / (x_right - x_left) * self.number_of_columns)
+            grid_x = max(0, min(grid_x, self.number_of_columns - 1))
 
         else:
             # Normal rectangular mode
@@ -253,13 +275,12 @@ class WaterRipples:
 
     def _propagate_iterative(self) -> None:
         """
-                Perform one simulation step of wave propagation using nested loops.
+        Perform one simulation step of wave propagation using nested loops.
 
-                The new value of each grid cell is computed as the average of its
-                four orthogonal neighbors from the previous state, minus the current
-                value. A damping factor is applied to simulate energy loss.
-        f
-                Updates are written in place to `self.current_state`.
+        The new value of each grid cell is computed as the average of its
+        four orthogonal neighbors from the previous state, minus the current
+        value. A damping factor is applied to simulate energy loss.
+        Updates are written in place to `self.current_state`.
         """
         for y in range(1, len(self.previous_state) - 1):
             for x in range(1, len(self.previous_state[y]) - 1):
@@ -334,7 +355,7 @@ class WaterRipples:
 
         elif mode == "colormap":
             normalized_state = current_state_clipped / self.maximum_brightness
-            colormap = cm.get_cmap("Blues_r")
+            colormap = plt.get_cmap("Blues_r")
             rgb_array = (
                 colormap(normalized_state)[..., :3] * self.maximum_brightness
             ).astype(np.uint8)
@@ -350,7 +371,7 @@ class WaterRipples:
             # multiplying it with `self.maximum_brightness` de-normalizes it. Finally,
             # each grid element is converted to an 8-bit unsigned integers, the standard
             # format for image pixel data.
-            colormap = cm.get_cmap("Blues_r")
+            colormap = plt.get_cmap("Blues_r")
             rgb_array = (
                 colormap(scaled_normalized_state)[..., :3]
                 * self.maximum_brightness
@@ -360,6 +381,21 @@ class WaterRipples:
             raise ValueError(f"Unknown mode: {mode}")
 
         return rgb_array
+    
+    def _inverse_vertical_scaling(self, y_adjusted: float, y_start: float = 0.5) -> float:
+        """
+        Given a projected screen position y_adjusted, returns the grid row y
+        that produces it — i.e. the inverse of _compute_vertical_scaling.
+        """
+        s = y_start / self.number_of_rows * 2
+        a = s / 2
+        b = y_start + s / 2
+
+        # Quadratic formula: a*y^2 + b*y - y_adjusted = 0
+        discriminant = b**2 + 4 * a * y_adjusted
+        y = (-b + np.sqrt(discriminant)) / (2 * a)
+
+        return y
 
     def _compute_vertical_scaling(
         self,
@@ -371,7 +407,7 @@ class WaterRipples:
         y_adjusted = y * y_start + (y * (y + 1) / 2) * y_scaling_factor
 
         return y_adjusted
-
+ 
     def _render_state(
         self, rgb_array: np.ndarray, mode: str = "surfarray"
     ) -> None:

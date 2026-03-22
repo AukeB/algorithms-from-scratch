@@ -4,7 +4,7 @@
 import numba
 import pygame as pg
 import numpy as np
-import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
 # Constants and algorithm parameters
 
@@ -105,7 +105,7 @@ class WaterRipples:
             framerate: Target framerate for rendering. Units: frames / second.
             render_mode (str): The way you render the RGB data. Options are
                 "surfarray" (fast, blitting the entire rgb array on the surface
-                at once), and "rectangles" (iterating through the RGB array and
+                at once), and "rectangle" (iterating through the RGB array and
                 drawing each element as a rectangle on the surface).
             rgb_mode (str): The method for converting your current state to an
                 RGB array. Options are "grayscale", "colormap" (uses matplotlib
@@ -216,13 +216,13 @@ class WaterRipples:
 
     def _propagate_iterative(self) -> None:
         """
-                Perform one simulation step of wave propagation using nested loops.
+        Perform one simulation step of wave propagation using nested loops.
 
-                The new value of each grid cell is computed as the average of its
-                four orthogonal neighbors from the previous state, minus the current
-                value. A damping factor is applied to simulate energy loss.
-        f
-                Updates are written in place to `self.current_state`.
+        The new value of each grid cell is computed as the average of its
+        four orthogonal neighbors from the previous state, minus the current
+        value. A damping factor is applied to simulate energy loss.
+
+        Updates are written in place to `self.current_state`.
         """
         for y in range(1, len(self.previous_state) - 1):
             for x in range(1, len(self.previous_state[y]) - 1):
@@ -297,7 +297,7 @@ class WaterRipples:
 
         elif mode == "colormap":
             normalized_state = current_state_clipped / self.maximum_brightness
-            colormap = cm.get_cmap("Blues_r")
+            colormap = plt.get_cmap("Blues_r")
             rgb_array = (
                 colormap(normalized_state)[..., :3] * self.maximum_brightness
             ).astype(np.uint8)
@@ -313,7 +313,7 @@ class WaterRipples:
             # multiplying it with `self.maximum_brightness` de-normalizes it. Finally,
             # each grid element is converted to an 8-bit unsigned integers, the standard
             # format for image pixel data.
-            colormap = cm.get_cmap("Blues_r")
+            colormap = plt.get_cmap("Blues_r")
             rgb_array = (
                 colormap(scaled_normalized_state)[..., :3]
                 * self.maximum_brightness
@@ -335,7 +335,7 @@ class WaterRipples:
                 containing RGB values in range [0, 255]. Must have dtype uint8.
             mode (str, optional): Rendering mode. Options:
                 - "surfarray": Fast rendering using pg.surfarray.make_surface().
-                - "rectangles": Draw each grid element as a PyGame rectangle.
+                - "rectangle": Draw each grid element as a PyGame rectangle.
                     Slower, but useful for debugging and customization.
                     Defaults to "surfarray".
 
@@ -359,7 +359,7 @@ class WaterRipples:
 
             self.screen.blit(surface, (0, 0))
 
-        elif mode == "rectangles":
+        elif mode == "rectangle":
             for y in range(len(rgb_array)):
                 for x in range(len(rgb_array[y])):
                     color = tuple(rgb_array[y, x])

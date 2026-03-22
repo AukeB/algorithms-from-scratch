@@ -4,15 +4,15 @@
 import numba
 import pygame as pg
 import numpy as np
-import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
 # Constants and algorithm parameters
 
 # Size and dimension related parameters
 WINDOW_WIDTH = 4000
 WINDOW_HEIGHT = 2500
-NUMBER_OF_COLUMNS = 80
-NUMBER_OF_ROWS = 50
+NUMBER_OF_COLUMNS = 120
+NUMBER_OF_ROWS = 80
 
 # Algorithm related parameters
 DAMPING = 0.99
@@ -41,11 +41,11 @@ BACKGROUND_COLOR = (0, 0, 0)
 # }
 
 NORMALIZED_TRAPEZOID: dict = {
-    "y_top": 0.55,
+    "y_top": 0.48,
     "y_bottom": 1.0,
     "x_top_left": 0,
     "x_top_right": 1,
-    "x_bottom_left": 0.9,
+    "x_bottom_left": 0.3,
     "x_bottom_right": 1,
 }
 
@@ -199,16 +199,38 @@ class WaterRipples:
         self.clock = pg.time.Clock()  # Used for setting the framerate
 
     def _handle_mouse(self, event: pg.event.Event) -> None:
-        if event.type != pg.MOUSEBUTTONDOWN:
+        if event.type not in (pg.MOUSEBUTTONDOWN, pg.MOUSEMOTION):
             return
 
         mx, my = event.pos
 
         if self.render_mode == "trapezoid":
-            # To implement
-            # For now, just handle the same as for the other render modes
-            grid_x = mx // self.grid_cell_width
-            grid_y = my // self.grid_cell_height
+            if my < self.trapezoid["y_top"] or my > self.trapezoid["y_bottom"]:
+                return
+            # Invert vertical scaling to find grid_y
+            y_top = self.trapezoid["y_top"]
+            y_bottom = self.trapezoid["y_bottom"]
+
+            # Normalize my into the vertical space _compute_vertical_scaling operates in
+            scaled_grid_cell_height = self.grid_cell_height * (
+                self.normalized_trapezoid["y_bottom"] - self.normalized_trapezoid["y_top"]
+            )
+            y_adjusted = (my - y_top) / scaled_grid_cell_height
+            grid_y = int(self._inverse_vertical_scaling(y_adjusted=y_adjusted))
+            grid_y = max(0, min(grid_y, self.number_of_rows - 1))
+
+            # Use grid_y to find the x boundaries of that row, then interpolate grid_x
+            y_adj = self._compute_vertical_scaling(y=grid_y)
+            x_left = self.trapezoid["x_top_left"] + (
+                self.normalized_trapezoid["x_bottom_left"] - self.normalized_trapezoid["x_top_left"]
+            ) * y_adj * (self.window_height / self.number_of_rows)
+            x_right = self.trapezoid["x_top_right"] + (
+                self.normalized_trapezoid["x_bottom_right"] - self.normalized_trapezoid["x_top_right"]
+            ) * y_adj * (self.window_height / self.number_of_rows)
+
+            # Interpolate x within that row
+            grid_x = int((mx - x_left) / (x_right - x_left) * self.number_of_columns)
+            grid_x = max(0, min(grid_x, self.number_of_columns - 1))
 
         else:
             # Normal rectangular mode
@@ -253,13 +275,12 @@ class WaterRipples:
 
     def _propagate_iterative(self) -> None:
         """
-                Perform one simulation step of wave propagation using nested loops.
+        Perform one simulation step of wave propagation using nested loops.
 
-                The new value of each grid cell is computed as the average of its
-                four orthogonal neighbors from the previous state, minus the current
-                value. A damping factor is applied to simulate energy loss.
-        f
-                Updates are written in place to `self.current_state`.
+        The new value of each grid cell is computed as the average of its
+        four orthogonal neighbors from the previous state, minus the current
+        value. A damping factor is applied to simulate energy loss.
+        Updates are written in place to `self.current_state`.
         """
         for y in range(1, len(self.previous_state) - 1):
             for x in range(1, len(self.previous_state[y]) - 1):
@@ -312,7 +333,7 @@ class WaterRipples:
         representing the color value)
 
         Args:
-            mode(str): The way the converstion from the current state to RGB
+            mode(str): The way t1400he converstion from the current state to RGB
                 is performed. Options are
                 - "grayscale": Maps the values to just black and white.
                 - "colormap": Use a colormap to visualize your state.
@@ -334,7 +355,7 @@ class WaterRipples:
 
         elif mode == "colormap":
             normalized_state = current_state_clipped / self.maximum_brightness
-            colormap = cm.get_cmap("Blues_r")
+            colormap = plt.get_cmap("Blues_r")
             rgb_array = (
                 colormap(normalized_state)[..., :3] * self.maximum_brightness
             ).astype(np.uint8)
@@ -350,7 +371,7 @@ class WaterRipples:
             # multiplying it with `self.maximum_brightness` de-normalizes it. Finally,
             # each grid element is converted to an 8-bit unsigned integers, the standard
             # format for image pixel data.
-            colormap = cm.get_cmap("Blues_r")
+            colormap = plt.get_cmap("Blues_r")
             rgb_array = (
                 colormap(scaled_normalized_state)[..., :3]
                 * self.maximum_brightness
@@ -360,6 +381,21 @@ class WaterRipples:
             raise ValueError(f"Unknown mode: {mode}")
 
         return rgb_array
+
+    def _inverse_vertical_scaling(self, y_adjusted: float, y_start: float = 0.5) -> float:
+        """
+        Given a projected screen position y_adjusted, returns the grid row y
+        that produces it — i.e. the inverse of _compute_vertical_scaling.
+        """
+        s = y_start / self.number_of_rows * 2
+        a = s / 2
+        b = y_start + s / 2
+
+        # Quadratic formula: a*y^2 + b*y - y_adjusted = 0
+        discriminant = b**2 + 4 * a * y_adjusted
+        y = (-b + np.sqrt(discriminant)) / (2 * a)
+
+        return y
 
     def _compute_vertical_scaling(
         self,
@@ -373,7 +409,10 @@ class WaterRipples:
         return y_adjusted
 
     def _render_state(
-        self, rgb_array: np.ndarray, mode: str = "surfarray"
+        self, 
+        rgb_array: np.ndarray, 
+        mask: np.ndarray,
+        mode: str = "surfarray",
     ) -> None:
         """
         Render the current state onto the PyGame screen.
@@ -487,7 +526,19 @@ class WaterRipples:
                         + y_adj_plus_one * scaled_grid_cell_height
                     )
 
-                    color_rgba = (*color, 100)
+                    if mask is not None:
+                        cx = int((x_cell_top + x_cell_top + scaled_grid_cell_width_top) / 2)
+                        cy = int((y_cell_top + y_cell_bottom) / 2)
+                        cx = max(0, min(cx, self.window_width - 1))
+                        cy = max(0, min(cy, self.window_height - 1))
+                        if not mask[cy, cx]:
+                            continue  # Skip this cell, it's outside the lake
+
+                    wave_intensity = float(self.current_state[y, x])
+                    wave_intensity = max(0.0, min(wave_intensity, 255.0))
+                    alpha = int((wave_intensity / 255.0) * 255)  # 180 = max alpha, tune to taste
+                    color_rgba = (*color, alpha)
+                                        
 
                     pg.draw.polygon(
                         overlay,
@@ -511,12 +562,12 @@ class WaterRipples:
         else:
             raise ValueError(f"Unknown rendering mode: {mode}")
 
-    def _draw_current_state(self) -> None:
+    def _draw_current_state(self, mask: np.ndarray) -> None:
         """
         Render the current simulation state to the PyGame window.
         """
         rgb_array = self._map_state_to_rgb(mode=self.rgb_mode)
-        self._render_state(rgb_array=rgb_array, mode=self.render_mode)
+        self._render_state(rgb_array=rgb_array, mode=self.render_mode, mask=mask)
 
     def execute(self) -> None:
         """
@@ -534,6 +585,7 @@ class WaterRipples:
         background = pg.transform.scale(
             background, (self.window_width, self.window_height)
         )
+        mask = np.load("miscellaneous/water_ripples/lake_mask.npy")
 
         while running:
             for event in pg.event.get():
@@ -541,12 +593,13 @@ class WaterRipples:
                     running = False
                 elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                     running = False
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    self._handle_mouse(event)
+                elif event.type == pg.MOUSEMOTION:
+                    if pg.mouse.get_pressed()[0]:  # Left button held
+                        self._handle_mouse(event)
 
             self.screen.blit(background, (0, 0))
             self._propagate(mode=self.propagate_mode)
-            self._draw_current_state()
+            self._draw_current_state(mask=mask)
 
             pg.display.flip()
             self.clock.tick(self.framerate)
