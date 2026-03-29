@@ -1,11 +1,19 @@
-"""One-off tool for defining a polygon mask by clicking points on an image."""
+"""
+One-off tool for defining a polygon mask by clicking points on an image.
+Because it is a one-off tool this has been entirely generated with an LLM.
+"""
 
 import json
 import pygame as pg
 
+from pathlib import Path
+
 # Config
-IMAGE_PATH = "miscellaneous/water_ripples/images/patagonia_lake.jpg"
-OUTPUT_PATH = "miscellaneous/water_ripples/polygon_points.json"
+DIR_PATH = Path("data/lake_1")
+IMAGE_PATH = DIR_PATH / "image.jpg"
+MASK_PATH = DIR_PATH / "mask.npy"
+POLYGON_PATH = DIR_PATH / "polygon_coordinates_test.json"
+
 WINDOW_WIDTH = 4000
 WINDOW_HEIGHT = 2500
 POINT_RADIUS = 5
@@ -48,7 +56,7 @@ def main() -> None:
                 if event.key == pg.K_ESCAPE:
                     running = False
                 elif event.key == pg.K_RETURN and len(points) >= 3:
-                    save_points(points, OUTPUT_PATH)
+                    save_points(points, str(POLYGON_PATH))
                     running = False
                 elif event.key == pg.K_z and points:
                     points.pop()

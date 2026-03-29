@@ -1,19 +1,26 @@
-"""One-off tool for generating a boolean mask from a polygon defined in a JSON file."""
+"""
+One-off tool for generating a boolean mask from a polygon defined in a JSON file.
+Because it is a one-off tool this has been entirely generated with an LLM.
+"""
 
 import json
 import numpy as np
 import pygame as pg
 
+from pathlib import Path
+
 # Config
-POLYGON_PATH = "miscellaneous/water_ripples/polygon_points.json"
-MASK_PATH = "miscellaneous/water_ripples/lake_mask.npy"
 WINDOW_WIDTH = 4000
 WINDOW_HEIGHT = 2500
+DIR_PATH = Path("data/lake_1")
+IMAGE_PATH = DIR_PATH / "image.jpg"
+MASK_PATH = DIR_PATH / "mask.npy"
+POLYGON_PATH = DIR_PATH / "polygon_coordinates_test.json"
 
 
 def main() -> None:
     # Load normalized points and denormalize to pixel coordinates
-    with open(POLYGON_PATH, "r") as f:
+    with open(str(POLYGON_PATH), "r") as f:
         normalized_points = json.load(f)
 
     pixel_points = [

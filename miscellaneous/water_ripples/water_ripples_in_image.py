@@ -15,7 +15,7 @@ NUMBER_OF_COLUMNS = 200
 NUMBER_OF_ROWS = int(NUMBER_OF_COLUMNS * (WINDOW_HEIGHT / WINDOW_WIDTH))
 
 # Algorithm related parameters
-DAMPING = 0.99
+DAMPING = 1
 WAVE_BRIGHTNESS = 255
 MAXIMUM_BRIGHTNESS = 255
 CURSOR_SPLASH_SIZE = 1
@@ -41,7 +41,7 @@ NORMALIZED_TRAPEZOID: dict = {
 }
 
 # Image related variables.
-DIR_PATH = Path("data/patagonia_lake")
+DIR_PATH = Path("data/lake_1")
 IMAGE_PATH = DIR_PATH / "image.jpg"
 MASK_PATH = DIR_PATH / "mask.npy"
 
