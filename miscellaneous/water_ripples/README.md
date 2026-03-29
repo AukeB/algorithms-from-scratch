@@ -1,10 +1,10 @@
-# Water Ripples Simulation
+# Water ripples simulation
 
 This project contains three implementations of a 2D water ripple simulation using PyGame, each building on the previous one. The simulation is based on a discrete wave equation described in [Hugo Elias's classic water ripple tutorial](https://web.archive.org/web/20160418004149/http://freespace.virgin.net/hugo.elias/graphics/x_water.htm).
 
 ---
 
-## `water_ripples.py` — Baseline Implementation
+## `water_ripples.py` — Baseline implementation
 
 The simplest version. The ripple simulation runs over a rectangular grid that fills the entire PyGame window. Two rendering modes are available: `surfarray` (fast, blits the entire RGB array at once using numpy) and `rectangle` (slower, draws each grid cell individually). Propagation can be done via `numba`, `numpy`, or an iterative loop.
 
@@ -12,7 +12,7 @@ This version has no depth illusion — the grid is flat and uniform, and clickin
 
 ---
 
-## `water_ripples_trapezoid.py` — Perspective Effect
+## `water_ripples_trapezoid.py` — Perspective effect
 
 Extends the baseline with a **trapezoid render mode** that projects the simulation grid onto a trapezoidal region of the window. This creates the illusion of depth — the grid narrows toward the top (far away) and widens toward the bottom (close), like a water surface viewed from an angle.
 
@@ -22,7 +22,7 @@ Mouse clicks are correctly mapped back to grid coordinates by inverting the vert
 
 ---
 
-## `water_ripples_in_image.py` — Overlay on a Real Image
+## `water_ripples_in_image.py` — Overlay on a real image
 
 The most complete version. Combines the trapezoid perspective approach with a real background photograph of a lake. The wave overlay is rendered transparently on top of the image, so the photo shows through wherever the water is flat and the ripple color only appears where waves are active.
 
