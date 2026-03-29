@@ -18,9 +18,7 @@ BACKGROUND_COLOR = (0, 0, 0)
 
 def save_points(points: list[tuple[int, int]], output_path: str) -> None:
     """Save polygon points to a JSON file, normalized to [0, 1]."""
-    normalized = [
-        (x / WINDOW_WIDTH, y / WINDOW_HEIGHT) for x, y in points
-    ]
+    normalized = [(x / WINDOW_WIDTH, y / WINDOW_HEIGHT) for x, y in points]
     with open(output_path, "w") as f:
         json.dump(normalized, f, indent=2)
     print(f"Saved {len(points)} points to {output_path}")
@@ -29,7 +27,9 @@ def save_points(points: list[tuple[int, int]], output_path: str) -> None:
 def main() -> None:
     pg.init()
     screen = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pg.display.set_caption("Click to define polygon — Enter to save, Z to undo, ESC to quit")
+    pg.display.set_caption(
+        "Click to define polygon — Enter to save, Z to undo, ESC to quit"
+    )
     font = pg.font.SysFont("monospace", 18)
 
     background = pg.image.load(IMAGE_PATH).convert()

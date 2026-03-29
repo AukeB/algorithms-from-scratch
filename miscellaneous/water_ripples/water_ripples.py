@@ -141,10 +141,10 @@ class WaterRipples:
         self.grid_cell_height = int(self.window_height / number_of_rows)
 
         # Initialize with an empty state.
-        self.current_state = np.zeros(
+        self.current_state: np.ndarray = np.zeros(
             (number_of_rows, number_of_columns), dtype=np.float32
         )
-        self.previous_state = np.zeros(
+        self.previous_state: np.ndarray = np.zeros(
             (number_of_rows, number_of_columns), dtype=np.float32
         )
 
@@ -155,9 +155,7 @@ class WaterRipples:
 
         # Initialize PyGame
         pg.init()
-        self.screen = pg.display.set_mode(
-            (self.window_width, self.window_height)
-        )
+        self.screen = pg.display.set_mode((self.window_width, self.window_height))
         self.clock = pg.time.Clock()  # Used for setting the framerate
 
     def _handle_mouse(self, event: pg.event.Event) -> None:
@@ -235,9 +233,7 @@ class WaterRipples:
                 )
 
                 # Apply ripple formula
-                self.current_state[y, x] = (
-                    neighbor_sum / 2 - self.current_state[y, x]
-                )
+                self.current_state[y, x] = neighbor_sum / 2 - self.current_state[y, x]
 
                 # Apply damping
                 self.current_state[y, x] *= self.damping
@@ -284,16 +280,14 @@ class WaterRipples:
         """
 
         # All values smaller than 0 become 0, and larger than 255 become 255.
-        current_state_clipped: np.ndarray = np.clip(
-            self.current_state, 0, 255
-        ).astype(np.float32)
+        current_state_clipped: np.ndarray = np.clip(self.current_state, 0, 255).astype(
+            np.float32
+        )
 
         if mode == "grayscale":
             # Take the current state value and stack it three times to get
             # greyscale RGB value.
-            rgb_array = np.stack([current_state_clipped] * 3, axis=-1).astype(
-                np.uint8
-            )
+            rgb_array = np.stack([current_state_clipped] * 3, axis=-1).astype(np.uint8)
 
         elif mode == "colormap":
             normalized_state = current_state_clipped / self.maximum_brightness
@@ -315,8 +309,7 @@ class WaterRipples:
             # format for image pixel data.
             colormap = plt.get_cmap("Blues_r")
             rgb_array = (
-                colormap(scaled_normalized_state)[..., :3]
-                * self.maximum_brightness
+                colormap(scaled_normalized_state)[..., :3] * self.maximum_brightness
             ).astype(np.uint8)
 
         else:
@@ -324,9 +317,7 @@ class WaterRipples:
 
         return rgb_array
 
-    def _render_state(
-        self, rgb_array: np.ndarray, mode: str = "surfarray"
-    ) -> None:
+    def _render_state(self, rgb_array: np.ndarray, mode: str = "surfarray") -> None:
         """
         Render the current state onto the PyGame screen.
 

@@ -17,8 +17,7 @@ def main() -> None:
         normalized_points = json.load(f)
 
     pixel_points = [
-        (int(x * WINDOW_WIDTH), int(y * WINDOW_HEIGHT))
-        for x, y in normalized_points
+        (int(x * WINDOW_WIDTH), int(y * WINDOW_HEIGHT)) for x, y in normalized_points
     ]
 
     # Use pygame to rasterize the polygon onto a surface
