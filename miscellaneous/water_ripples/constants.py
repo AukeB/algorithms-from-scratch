@@ -7,7 +7,7 @@ from pathlib import Path
 # Window width/height default to a fraction of the desktop (see utils_screen);
 # row count follows aspect ratio unless overridden in WaterRipples.__init__.
 NUMBER_OF_COLUMNS = 200
-WINDOW_SIZE_SCREEN_FRACTION = 0.9
+WINDOW_SIZE_SCREEN_FRACTION = 0.90
 
 # Algorithm related parameters (all three)
 DAMPING = 0.99
