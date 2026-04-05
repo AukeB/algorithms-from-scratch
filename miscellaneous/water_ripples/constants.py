@@ -1,15 +1,14 @@
-"""Shared default parameters for water ripple demo modules."""
+"""Shared default parameters for water_ripples modules."""
 
 from pathlib import Path
 
-# Size and dimension related parameters (all three: water_ripples.py,
-# water_ripples_in_image.py, water_ripples_trapezoid.py).
+# Size and dimension related parameters
 # Window width/height default to a fraction of the desktop (see utils_screen);
 # row count follows aspect ratio unless overridden in WaterRipples.__init__.
 NUMBER_OF_COLUMNS = 200
 WINDOW_SIZE_SCREEN_FRACTION = 0.85
 
-# Algorithm related parameters (all three)
+# Algorithm related parameters
 DAMPING = 0.99
 WAVE_BRIGHTNESS = 255
 MAXIMUM_BRIGHTNESS = 255
@@ -27,8 +26,7 @@ _LAKE_DATA_DIR = Path("data/lake_1")
 IMAGE_PATH = _LAKE_DATA_DIR / "image.jpg"
 MASK_PATH = _LAKE_DATA_DIR / "mask.npy"
 
-# Trapezoid related parameters — used in water_ripples_in_image.py and
-# water_ripples_trapezoid.py (not water_ripples.py).
+# Trapezoid related parameters — Not used in water_ripples.py.
 """
 This variable defines the normalized coordinates of a trapezoid.
 A trapezoid is a four-side polygon with at least one pair of parallel sides, known as the bases. In

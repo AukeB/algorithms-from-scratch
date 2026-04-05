@@ -3,15 +3,15 @@
 # Imports
 import os
 
-os.environ["NUMBA_CPU_NAME"] = (
-    "generic"  # Make sure it works for different architectures.
-)
+# Make sure it works for different architectures.
+os.environ["NUMBA_CPU_NAME"] = "generic"
 
 import numba
 import pygame as pg
 import numpy as np
 import matplotlib.pyplot as plt
 
+from utils_screen import resolve_window_and_grid
 from constants import (
     BACKGROUND_COLOR,
     CURSOR_SPLASH_SIZE,
@@ -24,7 +24,7 @@ from constants import (
     RGB_MODE,
     WAVE_BRIGHTNESS,
 )
-from utils_screen import resolve_window_and_grid
+
 
 # Settings
 

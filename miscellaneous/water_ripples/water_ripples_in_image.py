@@ -3,9 +3,8 @@
 # Imports
 import os
 
-os.environ["NUMBA_CPU_NAME"] = (
-    "generic"  # Make sure it works for different architectures.
-)
+# Make sure it works for different architectures.
+os.environ["NUMBA_CPU_NAME"] = "generic"
 
 import numba
 import pygame as pg
@@ -14,6 +13,7 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path
 
+from utils_screen import resolve_window_and_grid, resize_bool_mask_nearest
 from constants import (
     BACKGROUND_COLOR,
     CURSOR_SPLASH_SIZE,
@@ -26,20 +26,9 @@ from constants import (
     NUMBER_OF_COLUMNS,
     WAVE_BRIGHTNESS,
 )
-from utils_screen import resolve_window_and_grid
 
 
 # Functions.
-
-
-def _resize_bool_mask_nearest(mask: np.ndarray, out_h: int, out_w: int) -> np.ndarray:
-    """Scale a 2D mask to (out_h, out_w) with nearest-neighbor sampling."""
-    in_h, in_w = int(mask.shape[0]), int(mask.shape[1])
-    y_src = np.floor(np.arange(out_h, dtype=np.float64) * in_h / out_h).astype(np.intp)
-    x_src = np.floor(np.arange(out_w, dtype=np.float64) * in_w / out_w).astype(np.intp)
-    y_src = np.clip(y_src, 0, in_h - 1)
-    x_src = np.clip(x_src, 0, in_w - 1)
-    return mask[y_src[:, None], x_src[None, :]]
 
 
 @numba.njit(parallel=True)
@@ -169,9 +158,7 @@ class WaterRipples:
         )
         mask = np.asarray(np.load(self.mask_path))
         if mask.shape[0] != self.window_height or mask.shape[1] != self.window_width:
-            mask = _resize_bool_mask_nearest(
-                mask, self.window_height, self.window_width
-            )
+            mask = resize_bool_mask_nearest(mask, self.window_height, self.window_width)
         self.mask = mask.astype(bool)
 
     def _compute_vertical_scaling(self, y: float, y_start: float = 0.5) -> float:
