@@ -4,6 +4,8 @@ __pycache__/
 .ruff_cache/
 .ipynb_checkpoints/
 data/
+!miscellaneous/water_ripples/data/
+!miscellaneous/water_ripples/data/**
 artifacts/
 
 # Virtual environments
