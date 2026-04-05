@@ -1,6 +1,7 @@
 """Module that simulates 2D water ripples using PyGame."""
 
 # Imports
+import os
 import numba
 import pygame as pg
 import numpy as np
@@ -19,6 +20,13 @@ from constants import (
     WAVE_BRIGHTNESS,
 )
 from utils_screen import resolve_window_and_grid
+
+# Settings
+
+
+# Make sure it works for different architectures.
+os.environ["NUMBA_CPU_NAME"] = "generic"
+
 
 # Functions
 
