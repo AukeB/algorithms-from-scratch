@@ -1,5 +1,6 @@
 """Shared default parameters for water ripple demo modules."""
 
+import os
 from pathlib import Path
 
 # Size and dimension related parameters (all three: water_ripples.py,
@@ -59,3 +60,6 @@ Exponent > 3: Very heavy perspective — the top rows become extremely compresse
     and the bottom rows dominate. Can look unrealistic.
 """
 PERSPECTIVE_EXPONENT = 1
+
+# Make sure it works for different architectures.
+os.environ["NUMBA_CPU_NAME"] = "generic"
