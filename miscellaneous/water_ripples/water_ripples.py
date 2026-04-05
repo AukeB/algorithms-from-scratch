@@ -6,28 +6,19 @@ import pygame as pg
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Constants and algorithm parameters
-
-# Size and dimension related parameters
-WINDOW_WIDTH = 4000
-WINDOW_HEIGHT = 2500
-NUMBER_OF_COLUMNS = 80
-NUMBER_OF_ROWS = 50
-
-# Algorithm related parameters
-DAMPING = 0.99
-WAVE_BRIGHTNESS = 255
-MAXIMUM_BRIGHTNESS = 255
-
-# Modes
-RENDER_MODE = "surfarray"  # Options are ["surfarray", "rectangle"]
-RGB_MODE = "scaled_colormap"  # Options are ["grayscale", "colormap", "scaled_colormap"]
-PROPAGATE_MODE = "numba"  # Options are ["numba", "numpy", "iterative"]
-
-# Other parameter values
-CURSOR_SPLASH_SIZE = 1
-FRAMERATE = 60
-BACKGROUND_COLOR = (0, 0, 0)
+from constants import (
+    BACKGROUND_COLOR,
+    CURSOR_SPLASH_SIZE,
+    DAMPING,
+    FRAMERATE,
+    MAXIMUM_BRIGHTNESS,
+    NUMBER_OF_COLUMNS,
+    PROPAGATE_MODE,
+    RENDER_MODE,
+    RGB_MODE,
+    WAVE_BRIGHTNESS,
+)
+from utils_screen import resolve_window_and_grid
 
 # Functions
 
@@ -66,10 +57,10 @@ class WaterRipples:
 
     def __init__(
         self,
-        window_width: int = WINDOW_WIDTH,
-        window_height: int = WINDOW_HEIGHT,
+        window_width: int | None = None,
+        window_height: int | None = None,
         number_of_columns: int = NUMBER_OF_COLUMNS,
-        number_of_rows: int = NUMBER_OF_ROWS,
+        number_of_rows: int | None = None,
         damping: float = DAMPING,
         wave_brightness: int = WAVE_BRIGHTNESS,
         maximum_brightness: int = MAXIMUM_BRIGHTNESS,
@@ -88,10 +79,12 @@ class WaterRipples:
         grid, and then the grids are swapped.
 
         Args:
-            window_width: Width of the PyGame window in pixels.
-            window_height: Height of the PyGame window in pixels.
+            window_width: Window width in pixels, or None to use ~90% of desktop
+                width (windowed, not fullscreen).
+            window_height: Window height in pixels, or None with window_width for
+                automatic sizing.
             number_of_columns: Number of columns in the simulation grid.
-            number_of_rows: Number of rows in the simulation grid.
+            number_of_rows: Number of rows, or None to match window aspect ratio.
             damping: Factor between 0 and 1 that reduces wave amplitude each
                 frame.
             wave_brightness: Intensity value for the waves. Defaults to 255.
@@ -100,8 +93,8 @@ class WaterRipples:
                 values effectively produce higher visual contrast in the
                 ripples.
             maximum_brightness: Maximum brightness the visualization can display
-            cursor_splash_size (int): The size of the 'splash' when you click on
-                the screen
+            cursor_splash_size (int): Half-width of the disturbed square while the
+                left mouse button is held
             framerate: Target framerate for rendering. Units: frames / second.
             render_mode (str): The way you render the RGB data. Options are
                 "surfarray" (fast, blitting the entire rgb array on the surface
@@ -121,6 +114,13 @@ class WaterRipples:
             background_color (tuple(int, int, int)): The background color of the
                 canvas.
         """
+        window_width, window_height, number_of_rows = resolve_window_and_grid(
+            window_width,
+            window_height,
+            number_of_columns,
+            number_of_rows,
+        )
+
         # User input variables
         self.window_width = window_width
         self.window_height = window_height
@@ -158,33 +158,28 @@ class WaterRipples:
         self.screen = pg.display.set_mode((self.window_width, self.window_height))
         self.clock = pg.time.Clock()  # Used for setting the framerate
 
-    def _handle_mouse(self, event: pg.event.Event) -> None:
+    def _handle_mouse(self) -> None:
         """
-        Handle mouse clicks by creating a disturbance in the ripple grid.
+        Create a disturbance at the current mouse position while the left
+        button is held.
 
-        Args:
-            event (pg.event.Event): The PyGame mouse event.
-
-        Notes:
-            The disturbance is added to the `previous_state` array at the
-            grid cell corresponding to the mouse position. A small square
-            region is disturbed instead of a single cell to make the
-            ripple visible.
+        The disturbance is written to `previous_state` at the grid cell for
+        the cursor, using a small square of cells sized by
+        `cursor_splash_size`.
         """
-        if event.type == pg.MOUSEBUTTONDOWN:
-            mx, my = event.pos
+        mx, my = pg.mouse.get_pos()
 
-            grid_x = mx // self.grid_cell_width
-            grid_y = my // self.grid_cell_height
+        grid_x = mx // self.grid_cell_width
+        grid_y = my // self.grid_cell_height
 
-            self.previous_state[
-                max(grid_y - self.cursor_splash_size, 1) : min(
-                    grid_y + self.cursor_splash_size, self.number_of_rows - 1
-                ),
-                max(grid_x - self.cursor_splash_size, 1) : min(
-                    grid_x + self.cursor_splash_size, self.number_of_columns - 1
-                ),
-            ] = self.wave_brightness
+        self.previous_state[
+            max(grid_y - self.cursor_splash_size, 1) : min(
+                grid_y + self.cursor_splash_size, self.number_of_rows - 1
+            ),
+            max(grid_x - self.cursor_splash_size, 1) : min(
+                grid_x + self.cursor_splash_size, self.number_of_columns - 1
+            ),
+        ] = self.wave_brightness
 
     def _propagate_with_numpy(self) -> None:
         """
@@ -388,8 +383,9 @@ class WaterRipples:
                     running = False
                 elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                     running = False
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    self._handle_mouse(event)
+
+            if pg.mouse.get_pressed()[0]:
+                self._handle_mouse()
 
             self.screen.fill(self.background_color)
             self._propagate(mode=self.propagate_mode)

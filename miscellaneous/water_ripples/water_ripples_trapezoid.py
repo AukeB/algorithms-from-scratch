@@ -6,50 +6,18 @@ import pygame as pg
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Size and dimension related parameters
-WINDOW_WIDTH = 4000
-WINDOW_HEIGHT = 2500
-NUMBER_OF_COLUMNS = 300
-NUMBER_OF_ROWS = int(NUMBER_OF_COLUMNS * (WINDOW_HEIGHT / WINDOW_WIDTH))
-
-# Algorithm related parameters
-DAMPING = 0.99
-WAVE_BRIGHTNESS = 255
-MAXIMUM_BRIGHTNESS = 255
-CURSOR_SPLASH_SIZE = 2
-FRAMERATE = 60
-BACKGROUND_COLOR = (0, 0, 0)
-
-# Trapezoid related parameters.
-"""
-This variable defines the normalized coordinates of a trapezoid.
-A trapezoid is a four-side polygon with at least one pair of parallel sides, known as the bases. In
-our case the parallel sides are the two horizontal lines.
-
-- For 'y', 0 corresponds with top of the window, 1 would be the bottom of the window.
-- For 'x', 0 corresponds with the left side of the window, 1 would be the right side.
-"""
-NORMALIZED_TRAPEZOID: dict = {
-    "y_top": 0.2,
-    "y_bottom": 0.8,
-    "x_top_left": 0.6,
-    "x_top_right": 0.8,
-    "x_bottom_left": 0,
-    "x_bottom_right": 1,
-}
-
-"""
-This variable determines the 'amount' of persective you see in the trapezoid window
-
-Exponent = 0: Completely flat, no perspective at all.
-Exponent = 1 (linear): Equal distribution — every row gets progressively a little taller than the 
-    previous, but the difference between rows is constant. Not much perspective feel.
-Exponent = 2 (quadratic): Moderate perspective — rows grow noticeably faster toward the bottom.
-Exponent = 3 (cubic): Strong perspective — rows at the bottom are much taller than rows at the top. 
-Exponent > 3: Very heavy perspective — the top rows become extremely compressed, almost invisible, 
-    and the bottom rows dominate. Can look unrealistic.
-"""
-PERSPECTIVE_EXPONENT = 1
+from constants import (
+    BACKGROUND_COLOR,
+    CURSOR_SPLASH_SIZE,
+    DAMPING,
+    FRAMERATE,
+    MAXIMUM_BRIGHTNESS,
+    NORMALIZED_TRAPEZOID,
+    NUMBER_OF_COLUMNS,
+    PERSPECTIVE_EXPONENT,
+    WAVE_BRIGHTNESS,
+)
+from utils_screen import resolve_window_and_grid
 
 
 # Functions.
@@ -82,10 +50,10 @@ class WaterRipples:
 
     def __init__(
         self,
-        window_width: int = WINDOW_WIDTH,
-        window_height: int = WINDOW_HEIGHT,
+        window_width: int | None = None,
+        window_height: int | None = None,
         number_of_columns: int = NUMBER_OF_COLUMNS,
-        number_of_rows: int = NUMBER_OF_ROWS,
+        number_of_rows: int | None = None,
         damping: float = DAMPING,
         wave_brightness: int = WAVE_BRIGHTNESS,
         maximum_brightness: int = MAXIMUM_BRIGHTNESS,
@@ -103,10 +71,11 @@ class WaterRipples:
         grid, and then the grids are swapped.
 
         Args:
-            window_width: Width of the PyGame window in pixels.
-            window_height: Height of the PyGame window in pixels.
+            window_width: Window width in pixels, or None for ~90% of desktop
+                (windowed).
+            window_height: Window height in pixels, or None with window_width.
             number_of_columns: Number of columns in the simulation grid.
-            number_of_rows: Number of rows in the simulation grid.
+            number_of_rows: Number of rows, or None for aspect-matched grid.
             damping: Factor between 0 and 1 that reduces wave amplitude each
                 frame.
             wave_brightness: Intensity value for the waves.
@@ -115,6 +84,13 @@ class WaterRipples:
             framerate: Target framerate. Units: frames / second.
             background_color: The background color of the canvas.
         """
+        window_width, window_height, number_of_rows = resolve_window_and_grid(
+            window_width,
+            window_height,
+            number_of_columns,
+            number_of_rows,
+        )
+
         # Window and grid related settings:
         self.window_width = window_width
         self.window_height = window_height
