@@ -1,6 +1,12 @@
 """Module that simulates 2D water ripples using PyGame."""
 
 # Imports
+import os
+
+os.environ["NUMBA_CPU_NAME"] = (
+    "generic"  # Make sure it works for different architectures.
+)
+
 import numba
 import pygame as pg
 import numpy as np
