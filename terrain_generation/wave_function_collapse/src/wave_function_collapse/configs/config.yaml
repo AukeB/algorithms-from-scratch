@@ -1,0 +1,26 @@
+runtime:
+  file_name: city.xlsx # Input bitmap file name.
+  grid_dim: 40 # Width and height of the output grid in tiles.
+  tile_dim: 3 # Width and height of each tile in cells.
+  recursion_depth: 3 # Maximum number of cells outward that constraints propagate after each collapse step.
+
+modes:
+  mode_model: overlapping # Options: ['overlapping', 'simple_tiled', 'tiled']
+  mode_boundary_conditions: wrap_around # Options: ['wrap_around', 'clamping', 'mirroring', 'noise']
+
+bitmaps: # Settings for all the defined bitmaps.
+  city:
+    dimensions: [9, 9] # Width and height in number of cells in the .xlsx file.
+  flowers:
+    dimensions: [24, 24]
+  loop:
+    dimensions: [16, 16]
+  mountains:
+    dimensions: [16, 16]
+  network:
+    dimensions: [16, 16]
+
+png_bitmap: # bitmap .png export settings.
+  export: True # Whether the .xlsx bitmap will be exported as a .png.
+  cell_size: 30 # Cell width and height in pixels.
+  background_color: [0, 0, 0] # RGB-notation.

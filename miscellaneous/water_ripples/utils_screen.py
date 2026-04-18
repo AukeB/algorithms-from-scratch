@@ -5,34 +5,44 @@ import pygame as pg
 from constants import WINDOW_SIZE_SCREEN_FRACTION
 
 
-def window_size_from_screen() -> tuple[int, int]:
+def window_size_from_screen(
+    monitor_index: int = 0,
+    min_width: int = 400,
+    min_height: int = 300,
+) -> tuple[int, int]:
     """
-    Windowed (non-fullscreen) size: a fraction of the primary desktop resolution.
+    Compute a windowed (non-fullscreen) size as a fraction of the primary desktop resolution.
 
-    Uses pygame.display.get_desktop_sizes() when available, otherwise
-    pygame.display.Info().
+    1. Initialise the pygame display module if not already active.
+    2. Attempt to read the desktop resolution via get_desktop_sizes() (pygame >= 2.0).
+    3. Fall back to display.Info() for older pygame versions.
+    4. Apply WINDOW_SIZE_SCREEN_FRACTION and clamp to the minimum dimensions.
+
+    Args:
+        monitor_index (int): Index of the monitor to use from get_desktop_sizes().
+        min_width (int): Minimum window width in pixels.
+        min_height (int): Minimum window height in pixels.
 
     Returns:
         tuple[int, int]: The window width and height in pixels.
     """
-    if not pg.get_init():
-        pg.init()
+    # Init
+    if not pg.display.get_init():
+        pg.display.init()
 
-    get_sizes = getattr(pg.display, "get_desktop_sizes", None)
-    sizes = get_sizes() if get_sizes is not None else []
-
-    if sizes:
-        desktop_w, desktop_h = sizes[0]
+    # Resolve desktop resolution
+    if pg.version.vernum >= (2, 0, 0):
+        desktop_width, desktop_height = pg.display.get_desktop_sizes()[monitor_index]
     else:
         info = pg.display.Info()
-        desktop_w = info.current_w or 1920
-        desktop_h = info.current_h or 1080
+        desktop_width = info.current_w if info.current_w > 0 else 1920
+        desktop_height = info.current_h if info.current_h > 0 else 1080
 
-    frac = WINDOW_SIZE_SCREEN_FRACTION
-    w = max(1, int(desktop_w * frac))
-    h = max(1, int(desktop_h * frac))
+    # Scale
+    width = max(min_width, int(desktop_width * WINDOW_SIZE_SCREEN_FRACTION))
+    height = max(min_height, int(desktop_height * WINDOW_SIZE_SCREEN_FRACTION))
 
-    return w, h
+    return width, height
 
 
 def resolve_window_and_grid(

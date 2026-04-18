@@ -1,31 +1,41 @@
-""" """
+"""Module for the entry point of the Wave Function Collapse algorithm."""
 
-from bitmap import BitmapUtils
-from wfc import WaveFunctionCollapse
-from config_manager import ConfigManager
-from constants import Size, config_core_file_path, config_runtime_file_path
+from src.wave_function_collapse.bitmap import BitmapUtils
+from src.wave_function_collapse.wfc import WaveFunctionCollapse
+from src.wave_function_collapse.config_manager import ConfigManager
+from src.wave_function_collapse.constants import Size
 
 
-def main():
-    # Read configs
-    config_manager = ConfigManager(
-        config_core_relative_path=config_core_file_path,
-        config_runtime_relative_path=config_runtime_file_path,
-    )
+def main() -> None:
+    """
+    Orchestrate the WFC algorithm from config loading through repeated execution.
 
-    config_core, config_runtime = config_manager.read_configs()
+    1. Load and validate the configuration from disk.
+    2. Read the input bitmap from the configured .xlsx file.
+    3. Build the color mapping and apply it to the bitmap.
+    4. Construct the grid and tile dimensions from config.
+    5. Run the WFC algorithm for 10 iterations.
+    """
+    # Load configuration file.
+    config_manager = ConfigManager()
+    config = config_manager.read_config()
 
-    # Read bitmap
-    bitmap_utils = BitmapUtils(config=config_core, file_name=config_runtime["file_name"])
+    # Bitmap
+    bitmap_utils = BitmapUtils(config=config, file_name=config.runtime.file_name)
     bitmap = bitmap_utils.read_bitmap_from_excel()
     color_mapping = bitmap_utils.create_color_mapping(bitmap=bitmap)
-    bitmap = bitmap_utils.apply_color_mapping(bitmap=bitmap, color_mapping=color_mapping)
+    bitmap = bitmap_utils.apply_color_mapping(
+        bitmap=bitmap, color_mapping=color_mapping
+    )
 
-    grid_dimensions: Size[int, int] = Size(config_runtime["grid_dim"], config_runtime["grid_dim"])
-    tile_dimensions: Size[int, int] = Size(config_runtime["tile_dim"], config_runtime["tile_dim"])
+    # Dimensions
+    grid_dimensions = Size(config.runtime.grid_dim, config.runtime.grid_dim)
+    tile_dimensions = Size(config.runtime.tile_dim, config.runtime.tile_dim)
 
+    # Run
     for _ in range(10):
         wfc = WaveFunctionCollapse(
+            config=config,
             bitmap=bitmap,
             grid_dimensions=grid_dimensions,
             tile_dimensions=tile_dimensions,
