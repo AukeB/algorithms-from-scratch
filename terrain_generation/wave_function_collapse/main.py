@@ -52,8 +52,12 @@ if __name__ == "__main__":
 """
 TODO
 - Add contradiction detection — if any cell's options are intersected to an empty set,
-the algorithm should backtrack to the last collapse decision and try a different tile.
+  the algorithm should backtrack to the last collapse decision and try a different tile.
 - Add a visualize boolean parameter to WaveFunctionCollapse that skips
-compute_superposition_tile during propagation, significantly improving
-performance when visualization is not needed.
+  compute_superposition_tile during propagation, significantly improving
+  performance when visualization is not needed.
+- Implement mode_boundary_conditions: currently only wrap_around is supported in practice;
+  clamping, mirroring and noise are validated by Pydantic but never acted on.
+- Implement mode_model alternatives: currently only overlapping is supported;
+  simple_tiled and tiled are validated by Pydantic but never acted on.
 """
