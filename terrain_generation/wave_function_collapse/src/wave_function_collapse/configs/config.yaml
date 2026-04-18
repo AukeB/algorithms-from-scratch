@@ -1,8 +1,8 @@
 runtime:
-  file_name: city.xlsx # Input bitmap file name.
+  file_name: flowers.xlsx # Input bitmap file name.
   grid_dim: 40 # Width and height of the output grid in tiles.
   tile_dim: 3 # Width and height of each tile in cells.
-  recursion_depth: 3 # Maximum number of cells outward that constraints propagate after each collapse step.
+  recursion_depth: 5 # Maximum number of cells outward that constraints propagate after each collapse step.
 
 modes:
   mode_model: overlapping # Options: ['overlapping', 'simple_tiled', 'tiled']

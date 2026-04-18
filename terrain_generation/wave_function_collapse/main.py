@@ -47,3 +47,13 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+"""
+TODO
+- Add contradiction detection — if any cell's options are intersected to an empty set,
+the algorithm should backtrack to the last collapse decision and try a different tile.
+- Add a visualize boolean parameter to WaveFunctionCollapse that skips
+compute_superposition_tile during propagation, significantly improving
+performance when visualization is not needed.
+"""

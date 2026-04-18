@@ -10,7 +10,7 @@ BITMAPS_DIRECTORY_PATH = Path("src/wave_function_collapse/bitmaps/")
 # Named tuples.
 Size = namedtuple("Size", ["width", "height"])
 
-# Type defintions.
+# Type definitions.
 type RGBColor = tuple[int, int, int]
 type TileValue = tuple[tuple[str, ...], ...]
 
@@ -23,4 +23,4 @@ DIRECTIONS: dict[str, list[int]] = {
 }
 
 # Determines the ratio between the PyGame window resolution and the screen resolution
-WINDOW_SIZE_SCREEN_FRACTION = 0.9
+WINDOW_SIZE_SCREEN_FRACTION = 0.95
