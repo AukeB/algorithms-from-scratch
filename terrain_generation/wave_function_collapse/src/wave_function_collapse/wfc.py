@@ -8,8 +8,8 @@ from collections import defaultdict, Counter
 from src.wave_function_collapse.config_manager import ConfigModel
 from src.wave_function_collapse.tile import Tile
 from src.wave_function_collapse.grid_cell import GridCell
-from src.wave_function_collapse.visualizer import WFCVisualizer
-from src.wave_function_collapse.constants import Size, RGBColor, DIRECTIONS
+from src.wave_function_collapse.wfc_visualizer import WFCVisualizer
+from src.wave_function_collapse.constants import Dimensions, RGBColor, DIRECTIONS
 
 
 class WaveFunctionCollapse:
@@ -26,8 +26,6 @@ class WaveFunctionCollapse:
         self,
         config: ConfigModel,
         bitmap: list[list[str]],
-        grid_dimensions: Size,
-        tile_dimensions: Size,
         color_mapping: dict[RGBColor, str],
     ) -> None:
         """
@@ -41,18 +39,19 @@ class WaveFunctionCollapse:
         6. Initialise the visualizer.
 
         Args:
-            config (ConfigModel): The validated configuration pydantic configuration model.
+            config (ConfigModel): The validated pydantic configuration model.
             bitmap (list[list[str]]): The color-mapped bitmap as a 2D list of characters.
-            grid_dimensions (Size): The width and height of the output grid in tiles.
-            tile_dimensions (Size): The width and height of each tile in cells.
-            color_mapping (dict[RGBColor, str]): A dict mapping characters to RGB tuples.
+            color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples to characters.
         """
-        self.config = config
         self.bitmap = bitmap
-        self.bitmap_dimensions = Size(len(self.bitmap[0]), len(self.bitmap))
-        self.grid_dimensions = grid_dimensions
-        self.tile_dimensions = tile_dimensions
-        self.recursion_depth = config.runtime.recursion_depth
+        self.bitmap_dimensions = Dimensions(len(self.bitmap[0]), len(self.bitmap))
+        self.grid_dimensions = Dimensions(
+            config.general.grid_dim, config.general.grid_dim
+        )
+        self.tile_dimensions = Dimensions(
+            config.general.tile_dim, config.general.tile_dim
+        )
+        self.recursion_depth = config.general.recursion_depth
         self.color_mapping = color_mapping
 
         self.directions = DIRECTIONS
@@ -66,15 +65,9 @@ class WaveFunctionCollapse:
         self.wfc_visualizer = WFCVisualizer(
             config=config,
             grid_dimensions=self.grid_dimensions,
-            tile_dimensions=tile_dimensions,
+            tile_dimensions=self.tile_dimensions,
             color_mapping=self.color_mapping,
         )
-
-        # #self.wfc_visualizer.show_tiles(self.all_tiles)
-        # #self.wfc_visualizer.show_tiles(self.tile_weights)
-        # self.wfc_visualizer.show_neighbors(self.neighbors)
-        # To do: make a sort of test environment within pygame with buttons
-        # something like: self.wfc_visualizer.test_environment()
 
     def _validate_tile_and_bitmap_dimensions(self) -> None:
         """
@@ -84,18 +77,16 @@ class WaveFunctionCollapse:
             ValueError: If either tile dimension is larger than the smallest
                 bitmap dimension.
         """
-        min_bitmap_dim = min(
-            self.bitmap_dimensions.width, self.bitmap_dimensions.height
-        )
+        min_bitmap_dim = min(self.bitmap_dimensions.cols, self.bitmap_dimensions.rows)
 
         if (
-            self.tile_dimensions.width > min_bitmap_dim
-            or self.tile_dimensions.height > min_bitmap_dim
+            self.tile_dimensions.cols > min_bitmap_dim
+            or self.tile_dimensions.rows > min_bitmap_dim
         ):
             raise ValueError(
                 f"tile_size ({self.tile_dimensions}) must be smaller than or equal to the "
-                f"minimum dimension of the bitmap (width: {self.bitmap_dimensions.width}, "
-                f"height: {self.bitmap_dimensions.height})"
+                f"minimum dimension of the bitmap (width: {self.bitmap_dimensions.cols}, "
+                f"height: {self.bitmap_dimensions.rows})"
             )
 
     def _extract_tile(self, x: int, y: int) -> Tile:
@@ -114,12 +105,12 @@ class WaveFunctionCollapse:
         """
         tile_value = tuple(
             tuple(
-                self.bitmap[(y + i) % self.bitmap_dimensions.height][
-                    (x + j) % self.bitmap_dimensions.width
+                self.bitmap[(y + i) % self.bitmap_dimensions.rows][
+                    (x + j) % self.bitmap_dimensions.cols
                 ]
-                for j in range(self.tile_dimensions.width)
+                for j in range(self.tile_dimensions.cols)
             )
-            for i in range(self.tile_dimensions.height)
+            for i in range(self.tile_dimensions.rows)
         )
 
         tile = Tile(tile_value)
@@ -139,16 +130,16 @@ class WaveFunctionCollapse:
         4. Return the weights dict and the full ordered tile list.
 
         Returns:
-            tile_weights, all_tiles (tuple[dict[TileValue, float], list[Tile]]):
-                A tuple of the tile weights dict and the ordered list of all extracted tiles.
+            result (tuple[dict[Tile, float], list[Tile]]): A tuple of the tile
+                weights dict and the ordered list of all extracted tiles.
         """
         tile_count: Counter = Counter()
-        total_occurrences = self.bitmap_dimensions.height * self.bitmap_dimensions.width
+        total_occurrences = self.bitmap_dimensions.rows * self.bitmap_dimensions.cols
 
-        all_tiles = []  # TODO: Maybe change to set ?
+        all_tiles = []
 
-        for y in range(self.bitmap_dimensions.height):
-            for x in range(self.bitmap_dimensions.width):
+        for y in range(self.bitmap_dimensions.rows):
+            for x in range(self.bitmap_dimensions.cols):
                 tile = self._extract_tile(x, y)
                 tile_count[tile] += 1
                 all_tiles.append(tile)
@@ -200,9 +191,9 @@ class WaveFunctionCollapse:
                     tile_weights=self.tile_weights,
                     color_mapping=self.color_mapping,
                 )
-                for _ in range(self.grid_dimensions.width)
+                for _ in range(self.grid_dimensions.cols)
             ]
-            for _ in range(self.grid_dimensions.height)
+            for _ in range(self.grid_dimensions.rows)
         ]
 
         return grid
@@ -235,8 +226,8 @@ class WaveFunctionCollapse:
             ny, nx = y + dy, x + dx
 
             if (
-                0 <= nx < self.grid_dimensions.width
-                and 0 <= ny < self.grid_dimensions.height
+                0 <= nx < self.grid_dimensions.cols
+                and 0 <= ny < self.grid_dimensions.rows
                 and not self.grid[ny][nx].collapsed
                 and not self.grid[ny][nx].propagated
             ):
@@ -262,8 +253,8 @@ class WaveFunctionCollapse:
 
                 self.propagate(ny, nx, recursion_depth - 1)
 
-        for y in range(self.grid_dimensions.height):
-            for x in range(self.grid_dimensions.width):
+        for y in range(self.grid_dimensions.rows):
+            for x in range(self.grid_dimensions.cols):
                 self.grid[y][x].propagated = False
 
     def _collapse_grid_cell(self, y: int, x: int, tile: Tile) -> None:
@@ -300,8 +291,8 @@ class WaveFunctionCollapse:
             min_entropy = float("inf")
             min_cells = []
 
-            for cell_y in range(self.grid_dimensions.height):
-                for cell_x in range(self.grid_dimensions.width):
+            for cell_y in range(self.grid_dimensions.rows):
+                for cell_x in range(self.grid_dimensions.cols):
                     if not self.grid[cell_y][cell_x].collapsed:
                         options = self.grid[cell_y][cell_x].options
 

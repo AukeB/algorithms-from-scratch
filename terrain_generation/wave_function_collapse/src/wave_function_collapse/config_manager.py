@@ -32,8 +32,8 @@ class ConfigManager:
             raise FileNotFoundError(f"Config file not found: {self.config_file_path}")
 
         with open(self.config_file_path, "r", encoding="utf-8") as file:
-            raw = yaml.safe_load(file)
+            raw_config = yaml.safe_load(file)
 
-        config = ConfigModel(**raw)
+        config = ConfigModel(**raw_config)
 
         return config
