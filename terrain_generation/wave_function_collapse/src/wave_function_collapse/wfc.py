@@ -52,6 +52,7 @@ class WaveFunctionCollapse:
             config.general.tile_dim, config.general.tile_dim
         )
         self.recursion_depth = config.general.recursion_depth
+        self.show_superposition = config.general.show_superposition
         self.color_mapping = color_mapping
 
         self.directions = DIRECTIONS
@@ -190,6 +191,7 @@ class WaveFunctionCollapse:
                     tile_set=self.tile_set.copy(),
                     tile_weights=self.tile_weights,
                     color_mapping=self.color_mapping,
+                    show_superposition=self.show_superposition,
                 )
                 for _ in range(self.grid_dimensions.cols)
             ]
@@ -249,6 +251,7 @@ class WaveFunctionCollapse:
                 self.grid[ny][nx].compute_superposition_tile(
                     tile_weights=self.tile_weights,
                     color_mapping=self.color_mapping,
+                    show_superposition=self.show_superposition,
                 )
 
                 self.propagate(ny, nx, recursion_depth - 1)

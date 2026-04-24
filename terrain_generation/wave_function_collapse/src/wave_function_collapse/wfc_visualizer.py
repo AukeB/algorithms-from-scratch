@@ -45,6 +45,8 @@ class WFCVisualizer:
         self.grid_dimensions = grid_dimensions
         self.tile_dimensions = tile_dimensions
         self.margin_size = margin_size
+        self.show_superposition = config.general.show_superposition
+        self.grid_background_color = tuple(config.general.grid_background_color)
 
         # Invert the color mapping so RGB tuples can be resolved back to characters.
         self.inverted_color_mapping = {v: k for k, v in color_mapping.items()}
@@ -124,27 +126,25 @@ class WFCVisualizer:
         """
         Draw a single grid cell as a filled rectangle at pixel position (x, y).
 
-        If the cell has not yet collapsed, the center pixel of its superposition
-        tile is used as the fill color. If collapsed, the character at the center
-        of the tile value is resolved to an RGB color via the inverted color mapping.
+        If the cell has collapsed, the character at the center of the tile value
+        is resolved to an RGB color via the inverted color mapping. If uncollapsed
+        and show_superposition is True, the center pixel of the superposition tile
+        is used. If uncollapsed and show_superposition is False, the grid background
+        color is used instead.
 
         Args:
             cell (GridCell): The grid cell to draw.
             y (int): The y pixel coordinate of the tile's top-left corner.
             x (int): The x pixel coordinate of the tile's top-left corner.
         """
-        if cell.tile is None:
+        if cell.tile is not None:
+            cell_value = self.inverted_color_mapping[cell.tile.value[1][1]]
+        elif self.show_superposition:
             cell_value = cell.superposition_tile[1][1]  # type: ignore
         else:
-            cell_value = self.inverted_color_mapping[cell.tile.value[1][1]]
+            cell_value = self.grid_background_color
 
-        cell_rect = pg.Rect(
-            x,
-            y,
-            self.tile_size.width,
-            self.tile_size.height,
-        )
-
+        cell_rect = pg.Rect(x, y, self.tile_size.width, self.tile_size.height)
         pg.draw.rect(self.screen, cell_value, cell_rect)
 
     def visualize(self, grid: list[list[GridCell]]) -> None:

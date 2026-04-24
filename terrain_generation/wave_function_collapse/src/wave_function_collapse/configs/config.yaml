@@ -1,11 +1,12 @@
 general:
-  grid_dim: 40 # Width and height of the output grid in tiles.
+  grid_dim: 60 # Width and height of the output grid in tiles.
   tile_dim: 3 # Width and height of each tile in cells.
   recursion_depth: 5 # Maximum number of cells outward that constraints propagate after each collapse step.
-  show_superposition: False # Whether to show the superposition color of uncollapsed cells.
+  show_superposition: True # Whether to show the superposition color of uncollapsed cells.
+  grid_background_color: [50, 50, 50]  # RGB color used for uncollapsed cells when show_superposition is False.
 
 bitmap: # Settings related to the bitmap.
-  input_file_name: city.xlsx # Input bitmap file name.
+  input_file_name: mountains.xlsx # Input bitmap file name.
   export: True # Whether the .xlsx bitmap will be exported as a .png.
   export_file_format: .png # File format of the image export.
   cell_size: 30 # Cell width and height in pixels.
@@ -14,4 +15,3 @@ bitmap: # Settings related to the bitmap.
 modes:
   mode_model: overlapping # Options: ['overlapping', 'simple_tiled', 'tiled']
   mode_boundary_conditions: wrap_around # Options: ['wrap_around', 'clamping', 'mirroring', 'noise']
-

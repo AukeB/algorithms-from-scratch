@@ -19,6 +19,7 @@ class ConfigModel(BaseModel):
         tile_dim: int
         recursion_depth: int
         show_superposition: bool
+        grid_background_color: RGBColor
 
     class BitmapConfig(BaseModel):
         """Schema for bitmap input and export settings."""

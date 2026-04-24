@@ -28,6 +28,7 @@ class GridCell:
         tile_set: set[Tile],
         tile_weights: dict[Tile, float],
         color_mapping: dict[RGBColor, str],
+        show_superposition: bool,
     ) -> None:
         """
         Initialise the cell with all tiles as options and compute its superposition tile.
@@ -46,6 +47,7 @@ class GridCell:
         self.compute_superposition_tile(
             tile_weights=tile_weights,
             color_mapping=color_mapping,
+            show_superposition=show_superposition,
         )
 
     def __repr__(self) -> str:
@@ -66,6 +68,7 @@ class GridCell:
         self,
         tile_weights: dict[Tile, float],
         color_mapping: dict[RGBColor, str],
+        show_superposition: bool,
     ) -> None:
         """
         Compute a weighted average RGB tile across all current tile options.
@@ -86,6 +89,9 @@ class GridCell:
             color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples
                 to characters.
         """
+        if not show_superposition:
+            return
+
         # Invert mapping so characters can be resolved back to RGB values.
         inverted_color_mapping = {v: k for k, v in color_mapping.items()}
         rgb_matrix: list[list[RGBColor]] = [
