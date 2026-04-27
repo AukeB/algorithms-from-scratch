@@ -1,16 +1,13 @@
 """Module for visualizing Perlin Noise using pygame."""
 
+from typing import Callable
+
 import numpy as np
 import pygame as pg
 
-from typing import Callable
-
 from src.perlin_noise.config_manager import ConfigModel
-from src.perlin_noise.constants import Size, Dimensions
-from src.perlin_noise.utils.utils_color import lerp_color
-from src.perlin_noise.utils.utils_pygame import (
-    get_window_size_from_screen_resolution,
-)
+from src.perlin_noise.constants import Dimensions, Size
+from src.perlin_noise.utils import get_window_size_from_screen_resolution, lerp_color
 
 
 class PNVisualizer:
@@ -19,7 +16,7 @@ class PNVisualizer:
     def __init__(
         self,
         config: ConfigModel,
-    ):
+    ) -> None:
         """
         Initialize pygame and configure the visualizer for the given grid.
 

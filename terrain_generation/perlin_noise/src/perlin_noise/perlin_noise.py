@@ -1,11 +1,13 @@
 """Module for the Perlin noise grid and gradient vector initialization."""
 
 import math
+
 import numpy as np
 
-from src.perlin_noise.constants import Dimensions
 from src.perlin_noise.config_model import ConfigModel
+from src.perlin_noise.constants import Dimensions
 from src.perlin_noise.pn_visualizer import PNVisualizer
+from src.perlin_noise.utils import smooth_perline_polyominal
 
 
 class PerlinNoise:
@@ -28,6 +30,7 @@ class PerlinNoise:
             rows=config.grid.dim * self.cell_resolution,
             cols=config.grid.dim * self.cell_resolution,
         )
+        self.smoothing_version: str = config.grid.smoothing_version
 
         self.gradient_grid: np.ndarray
         self.noise_grid: np.ndarray = np.zeros(self.noise_grid_dimensions)
@@ -105,8 +108,12 @@ class PerlinNoise:
                     dx, dy = offset_vectors[0]
 
                     # Smoothing
-                    sx = dx * dx * (3 - 2 * dx)
-                    sy = dy * dy * (3 - 2 * dy)
+                    sx = smooth_perline_polyominal(
+                        dx, smoothing_version=self.smoothing_version
+                    )
+                    sy = smooth_perline_polyominal(
+                        dy, smoothing_version=self.smoothing_version
+                    )
 
                     # Interpolation.
                     bottom = dot_bl + sx * (dot_br - dot_bl)

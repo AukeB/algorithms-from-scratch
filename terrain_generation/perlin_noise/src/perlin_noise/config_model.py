@@ -1,5 +1,7 @@
 """Module for the configuration schema definitions for the Perlin noise algorithm."""
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 
 from src.perlin_noise.constants import RGBColor
@@ -18,6 +20,7 @@ class ConfigModel(ConfiguredBaseModel):
         dim: int
         cell_resolution: int
         random_seed: int | None
+        smoothing_version: Literal["original", "revised"]
 
     class VisualizationConfig(ConfiguredBaseModel):
         """Schema for visualization settings."""
