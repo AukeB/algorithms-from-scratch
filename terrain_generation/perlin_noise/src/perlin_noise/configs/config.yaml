@@ -1,5 +1,5 @@
 grid: # Settings related to the grid.
-  dim: 30 # Number of cells in width as well as height direction of the grid.
+  dim: 5 # Number of cells in width as well as height direction of the grid.
   cell_resolution: 10 # Number of candidate points per grid cell, for 1 dimension.
   random_seed: Null # Random seed, can be used for reproducibility.
   smoothing_version: "revised" # Options: ["original", "revised"].

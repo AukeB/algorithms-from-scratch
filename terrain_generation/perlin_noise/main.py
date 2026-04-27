@@ -19,3 +19,13 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+"""
+TODO
+- Create an interactive pygame window, where you can change the way the grid looks
+  based on parameter tweaking in the pygame window.
+- Implement Fractar layer (octaves, persistence, fractral brownian motion)
+- Simplex noise
+- Domain warping
+"""
