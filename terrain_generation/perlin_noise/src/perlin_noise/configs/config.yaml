@@ -1,0 +1,18 @@
+grid: # Settings related to the grid.
+  dim: 30 # Number of cells in width as well as height direction of the grid.
+  cell_resolution: 10 # Number of candidate points per grid cell, for 1 dimension.
+  random_seed: Null # Random seed, can be used for reproducibility.
+
+visualization: # Settings related to visualization of the Perlin Noise grid.
+  margin_size: 200 # Units: pixel coordinates.
+  arrow_length: 0.45 # Units: grid coordinates.
+  background_color: [255, 255, 255] # RGB values.
+  grid_line_color: [50, 50, 50] # RGB values.
+  circle_color: [0, 0, 0] # RGB values.
+  arrow_color: [240, 128, 128] # RGB values.
+  heatmap_positive_color: [200, 170, 0]
+  heatmap_negative_color: [120, 0, 180]
+
+  grid_line_width: 2 # Units: pixel coordinates.
+  circle_width: 8 # Units: pixel coordinates.
+  arrow_width: 8 # Units: pixel coordinates.
