@@ -123,17 +123,16 @@ class PerlinNoise:
 
         return noise_grid
 
-    def generate(self, visualize_substeps: bool = False) -> None:
+    def generate(self, visualize_substeps: bool = True) -> None:
         """Execute the Perlin Noise generation algorithm."""
         # 1. Populate the gradient grid with vectors at each node.
         self.gradient_grid = self._populate_gradient_grid()
 
         # Visualizations.
         if visualize_substeps:
-            # self.pn_visualizer.visualize_gradient_grid(gradient_grid=self.gradient_grid)
+            self.pn_visualizer.visualize_gradient_grid(gradient_grid=self.gradient_grid)
             self.noise_grid = self._compute_noise_grid(interpolate=False)
-
-            self.pn_visualizer.visualize_noise_grid(noise_grid=self.noise_grid)
+            # self.pn_visualizer.visualize_noise_grid(noise_grid=self.noise_grid)
 
         self.noise_grid = self._compute_noise_grid()
         self.pn_visualizer.visualize_noise_grid(noise_grid=self.noise_grid)
