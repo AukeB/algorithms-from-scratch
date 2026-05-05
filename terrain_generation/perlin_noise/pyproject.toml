@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [
     "numpy>=2.4.4",
+    "pg-plonker",
     "pydantic>=2.13.2",
     "pygame>=2.6.1",
     "pyyaml>=6.0.3",
@@ -25,3 +26,6 @@ select = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+
+[tool.uv.sources]
+pg-plonker = { path = "../../../pg-plonker", editable = true }

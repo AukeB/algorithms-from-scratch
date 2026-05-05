@@ -12,6 +12,12 @@ wheels = [
 ]
 
 [[package]]
+name = "logging"
+version = "0.4.9.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/4b/979db9e44be09f71e85c9c8cfc42f258adfb7d93ce01deed2788b2948919/logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417", size = 96029, upload-time = "2013-06-04T23:43:22.086Z" }
+
+[[package]]
 name = "numpy"
 version = "2.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -36,6 +42,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "numpy" },
+    { name = "pg-plonker" },
     { name = "pydantic" },
     { name = "pygame" },
     { name = "pyyaml" },
@@ -50,6 +57,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "numpy", specifier = ">=2.4.4" },
+    { name = "pg-plonker", editable = "../../../pg-plonker" },
     { name = "pydantic", specifier = ">=2.13.2" },
     { name = "pygame", specifier = ">=2.6.1" },
     { name = "pyyaml", specifier = ">=6.0.3" },
@@ -59,6 +67,32 @@ requires-dist = [
 dev = [
     { name = "ruff", specifier = ">=0.15.11" },
     { name = "ty", specifier = ">=0.0.31" },
+]
+
+[[package]]
+name = "pg-plonker"
+version = "0.1.0"
+source = { editable = "../../../pg-plonker" }
+dependencies = [
+    { name = "logging" },
+    { name = "pydantic" },
+    { name = "pygame" },
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "logging", specifier = ">=0.4.9.6" },
+    { name = "pydantic", specifier = ">=2.12.3" },
+    { name = "pygame", specifier = ">=2.6.1" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "prek", specifier = ">=0.3.8" },
+    { name = "ruff", specifier = ">=0.11.6" },
+    { name = "ty", specifier = ">=0.0.29" },
 ]
 
 [[package]]
