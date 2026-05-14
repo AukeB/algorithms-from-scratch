@@ -1,7 +1,6 @@
 """Module for visualizing Perlin Noise using pygame."""
 
 from dataclasses import dataclass
-from typing import Callable, NamedTuple
 
 import numpy as np
 import pg_plonker as pgp
