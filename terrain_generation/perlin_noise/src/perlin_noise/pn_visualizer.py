@@ -1,13 +1,52 @@
 """Module for visualizing Perlin Noise using pygame."""
 
-from typing import Callable
+from dataclasses import dataclass
+from typing import Callable, NamedTuple
 
 import numpy as np
+import pg_plonker as pgp
 import pygame as pg
+from pg_plonker.controls.button import Button
+from pg_plonker.gui_panel import GUIPanel
 
 from src.perlin_noise.config_manager import ConfigModel
 from src.perlin_noise.constants import Dimensions, Size
 from src.perlin_noise.utils import get_window_size_from_screen_resolution, lerp_color
+
+
+@dataclass
+class ButtonState:
+    """Toggle buttons for the Perlin noise visualization."""
+
+    grid: Button
+    gradient_vectors: Button
+    noise_vectors: Button
+
+
+@dataclass
+class VisibilityState:
+    """Toggleable visibility flags for the Perlin noise visualization."""
+
+    show_grid: bool
+    show_gradients: bool
+    show_noise: bool
+
+    @classmethod
+    def from_buttons(cls, buttons: ButtonState) -> "VisibilityState":
+        """
+        Construct a VisibilityState by reading the current state of each button.
+
+        Args:
+            buttons (ButtonState): The registered toggle buttons.
+
+        Returns:
+            visibility (VisibilityState): The current visibility state.
+        """
+        return cls(
+            show_grid=buttons.grid.state,
+            show_gradients=buttons.gradient_vectors.state,
+            show_noise=buttons.noise_vectors.state,
+        )
 
 
 class PNVisualizer:
@@ -44,11 +83,14 @@ class PNVisualizer:
 
         # Intializations.
         pg.init()
+
         self.screen_size = Size(*get_window_size_from_screen_resolution())
 
         self.screen = pg.display.set_mode(
             (self.screen_size.width, self.screen_size.height)
         )
+
+        self.gui_panel = GUIPanel(surface=self.screen)
 
         self.grid_size = min(
             self.screen_size.width - 2 * self.margin_size,
@@ -79,7 +121,7 @@ class PNVisualizer:
                 self.grid_line_width,
             )
 
-    def _draw_gradient_vectors(self, grid: np.ndarray) -> None:
+    def _draw_gradient_vectors(self, gradient_grid: np.ndarray) -> None:
         """
         Draw each grid node as a point and its gradient vector as an arrow.
 
@@ -87,7 +129,7 @@ class PNVisualizer:
             grid (np.ndarray): Array of shape (rows, cols, 2) containing a unit
                 gradient vector at each grid node.
         """
-        for row, row_data in enumerate(grid):
+        for row, row_data in enumerate(gradient_grid):
             for col, gradient in enumerate(row_data):
                 node_x = self.margin_size + col * self.cell_size
                 node_y = self.margin_size + row * self.cell_size
@@ -151,63 +193,44 @@ class PNVisualizer:
 
                 pg.draw.rect(self.screen, color, rect)
 
-    def _render(self, draw_operations: list[Callable]) -> None:
+    def register_buttons(self) -> ButtonState:
         """
-        Clear the screen, execute draw operations, present the frame,
-        and keep the window alive until exit.
+        Register all visualization toggle buttons with the GUI panel.
+
+        Returns:
+            buttons (ButtonState): The registered toggle buttons.
+        """
+        return ButtonState(
+            grid=self.gui_panel.add_button(text="Toggle Grid"),
+            gradient_vectors=self.gui_panel.add_button(text="Toggle gradients"),
+            noise_vectors=self.gui_panel.add_button(text="Toggle perlin noise"),
+        )
+
+    def draw_frame(
+        self,
+        gradient_grid: np.ndarray,
+        noise_grid: np.ndarray,
+        visibility: VisibilityState,
+    ) -> None:
+        """
+        Render a single frame of the Perlin noise visualization.
+
+        Args:
+            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) containing
+                unit gradient vectors at each grid node.
+            noise_grid (np.ndarray): 2D array of scalar noise values.
+            visibility (VisibilityState): Flags controlling which layers are drawn.
         """
         self.screen.fill(self.background_color)
+        self.gui_panel.draw()
 
-        for draw_operation in draw_operations:
-            draw_operation()
+        if visibility.show_noise:
+            self._draw_noise_cells(noise_grid=noise_grid)
+
+        if visibility.show_gradients:
+            self._draw_gradient_vectors(gradient_grid=gradient_grid)
+
+        if visibility.show_grid:
+            self._draw_grid_lines()
 
         pg.display.flip()
-
-        while True:
-            for event in pg.event.get():
-                if event.type == pg.QUIT or (
-                    event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE
-                ):
-                    pg.quit()
-                    raise SystemExit
-
-    def visualize_gradient_grid(self, gradient_grid: np.ndarray) -> None:
-        """
-        Visualize the gradient vector field on the lattice nodes.
-
-        Renders:
-            1. The grid lines defining the lattice structure.
-            2. A gradient vector at each lattice node.
-
-        Args:
-            gradient_grid (np.ndarray): Array of shape (rows, cols, 2)
-                containing unit gradient vectors for each lattice node.
-        """
-        self._render(
-            [
-                self._draw_grid_lines,
-                lambda: self._draw_gradient_vectors(grid=gradient_grid),
-            ]
-        )
-
-    def visualize_noise_grid(self, noise_grid: np.ndarray) -> None:
-        """
-        Visualize the raw scalar noise field before interpolation.
-
-        Each sample point is rendered as a distinct colored square cell.
-        Negative values map toward blue, positive values toward red,
-        and values near zero toward white.
-
-        This visualization is useful for inspecting the raw dot-product
-        contributions prior to Perlin interpolation.
-
-        Args:
-            noise_grid (np.ndarray): 2D array of scalar noise values
-                with shape (rows, cols).
-        """
-        self._render(
-            [
-                lambda: self._draw_noise_cells(noise_grid=noise_grid),
-                self._draw_grid_lines,
-            ]
-        )

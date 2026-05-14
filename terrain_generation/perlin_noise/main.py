@@ -14,7 +14,7 @@ def main() -> None:
 
     # 2. Generate Perlin Noise.
     pn = PerlinNoise(config=config)
-    pn.generate()
+    pn.run()
 
 
 if __name__ == "__main__":

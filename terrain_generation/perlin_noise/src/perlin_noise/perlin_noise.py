@@ -3,10 +3,11 @@
 import math
 
 import numpy as np
+import pygame as pg
 
 from src.perlin_noise.config_model import ConfigModel
 from src.perlin_noise.constants import Dimensions
-from src.perlin_noise.pn_visualizer import PNVisualizer
+from src.perlin_noise.pn_visualizer import PNVisualizer, VisibilityState
 from src.perlin_noise.utils import smooth_perline_polyominal
 
 
@@ -41,6 +42,8 @@ class PerlinNoise:
             self.rng = np.random.default_rng()
 
         self.pn_visualizer = PNVisualizer(config=config)
+
+        self.buttons = self.pn_visualizer.register_buttons()
 
     def _populate_gradient_grid(self) -> np.ndarray:
         """
@@ -127,9 +130,32 @@ class PerlinNoise:
         """Execute the Perlin Noise generation algorithm."""
         # 1. Populate the gradient grid with vectors at each node.
         self.gradient_grid = self._populate_gradient_grid()
-        self.noise_grid = self._compute_noise_grid(interpolate=False)
         self.noise_grid = self._compute_noise_grid()
 
-        # self.pn_visualizer.visualize_gradient_grid(gradient_grid=self.gradient_grid)
-        self.pn_visualizer.visualize_noise_grid(noise_grid=self.noise_grid)
-        # self.pn_visualizer.visualize_noise_grid(noise_grid=self.noise_grid)
+    def run(self) -> None:
+        """
+        Own the pygame event loop and orchestrate generation and rendering.
+
+        Calls generate() once on startup, then re-calls it whenever the regenerate
+        button is toggled. Rendering and visibility are delegated to draw_frame()
+        each iteration.
+        """
+        self.generate()
+
+        while True:
+            for event in pg.event.get():
+                if event.type == pg.QUIT or (
+                    event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE
+                ):
+                    pg.quit()
+                    raise SystemExit
+
+                self.pn_visualizer.gui_panel.handle_event(event=event)
+
+            visibility = VisibilityState.from_buttons(self.buttons)
+
+            self.pn_visualizer.draw_frame(
+                gradient_grid=self.gradient_grid,
+                noise_grid=self.noise_grid,
+                visibility=visibility,
+            )
