@@ -10,8 +10,7 @@ def get_window_size_from_screen_resolution(
     min_width: int = 400,
     min_height: int = 300,
 ) -> tuple[int, int]:
-    """
-    Compute a windowed (non-fullscreen) size as a fraction of the primary desktop resolution.
+    """Compute a windowed (non-fullscreen) size as a fraction of the primary desktop resolution.
 
     1. Initialise the pygame display module if not already active.
     2. Attempt to read the desktop resolution via get_desktop_sizes() (pygame >= 2.0).

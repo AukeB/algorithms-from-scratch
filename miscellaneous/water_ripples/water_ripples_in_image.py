@@ -72,21 +72,17 @@ class WaterRipples:
         image_path: Path = IMAGE_PATH,
         mask_path: Path = MASK_PATH,
     ) -> None:
-        """
-        Initialize the ripple simulation class.
+        """Initialize the ripple simulation class.
 
-        The simulation maintains two grids (previous_state and current_state).
-        At each step, values propagate from the previous grid to the current
-        grid, and then the grids are swapped.
+        The simulation maintains two grids (previous_state and current_state). At each step, values
+        propagate from the previous grid to the current grid, and then the grids are swapped.
 
         Args:
-            window_width: Window width in pixels, or None for ~90% of desktop
-                (windowed).
+            window_width: Window width in pixels, or None for ~90% of desktop (windowed).
             window_height: Window height in pixels, or None with window_width.
             number_of_columns: Number of columns in the simulation grid.
             number_of_rows: Number of rows, or None for aspect-matched grid.
-            damping: Factor between 0 and 1 that reduces wave amplitude each
-                frame.
+            damping: Factor between 0 and 1 that reduces wave amplitude each frame.
             wave_brightness: Intensity value for the waves.
             maximum_brightness: Maximum brightness the visualization can display.
             cursor_splash_size: The size of the splash when clicking.
@@ -162,25 +158,21 @@ class WaterRipples:
         self.mask = mask.astype(bool)
 
     def _compute_vertical_scaling(self, y: float, y_start: float = 0.5) -> float:
-        """
-        Maps grid row index y to a scaled y_adjusted value using perspective
-        foreshortening.
+        """Maps grid row index y to a scaled y_adjusted value using perspective foreshortening.
 
-        The formula is quadratic in y, meaning rows further down the grid get
-        a disproportionately larger y_adjusted value than rows near the top.
-        This causes rows to appear taller toward the bottom of the trapezoid
-        and shorter toward the top, simulating the look of a surface receding
-        into the distance.
+        The formula is quadratic in y, meaning rows further down the grid get a disproportionately
+        larger y_adjusted value than rows near the top. This causes rows to appear taller toward the
+        bottom of the trapezoid and shorter toward the top, simulating the look of a surface
+        receding into the distance.
 
         The y_start parameter controls the strength of the perspective effect:
-
-        y_start = 0.0: No perspective — all rows get equal height, completely flat.
-        y_start = 0.1: Very subtle perspective, barely noticeable.
-        y_start = 0.5: Moderate perspective, good default for a natural look.
-        y_start = 1.0: Strong perspective — rows at the bottom are noticeably
-            larger than rows at the top.
-        y_start > 1.0: Very heavy perspective — top rows become extremely
-            compressed, can look unrealistic.
+        - y_start = 0.0: No perspective — all rows get equal height, completely flat.
+        - y_start = 0.1: Very subtle perspective, barely noticeable.
+        - y_start = 0.5: Moderate perspective, good default for a natural look.
+        - y_start = 1.0: Strong perspective — rows at the bottom are noticeably larger than rows at
+          the top.
+        - y_start > 1.0: Very heavy perspective — top rows become extremely compressed, can look
+          unrealistic.
 
         Args:
             y: Grid row index, starting at 0 for the top row.
@@ -195,15 +187,13 @@ class WaterRipples:
     def _inverse_vertical_scaling(
         self, y_adjusted: float, y_start: float = 0.5
     ) -> float:
-        """
-        Given a projected screen position y_adjusted, returns the grid row y
-        that produces it — i.e. the inverse of _compute_vertical_scaling.
+        """Given a projected screen position y_adjusted, returns the grid row y that produces it —
+        i.e. the inverse of _compute_vertical_scaling.
 
-        This is needed to convert a mouse y pixel position back to a grid row
-        index when the user clicks or drags on the trapezoid. Since
-        _compute_vertical_scaling is a quadratic function of y, its inverse
-        is derived analytically using the quadratic formula. We always take
-        the positive root since grid row indices are non-negative.
+        This is needed to convert a mouse y pixel position back to a grid row index when the user
+        clicks or drags on the trapezoid. Since _compute_vertical_scaling is a quadratic function of
+        y, its inverse is derived analytically using the quadratic formula. We always take the
+        positive root since grid row indices are non-negative.
 
         Args:
             y_adjusted: The projected screen position to invert.
@@ -221,14 +211,12 @@ class WaterRipples:
         return y
 
     def _mouse_y_to_grid_y(self, my: int) -> int | None:
-        """
-        Convert a mouse y pixel position to a grid row index.
+        """Convert a mouse y pixel position to a grid row index.
 
-        First checks whether the mouse is within the vertical bounds of the
-        trapezoid — if not, returns None to signal that the click should be
-        ignored. Otherwise, normalizes the mouse position into the vertical
-        space that _compute_vertical_scaling operates in, then applies the
-        analytical inverse to find the corresponding grid row index.
+        First checks whether the mouse is within the vertical bounds of the trapezoid — if not,
+        returns None to signal that the click should be ignored. Otherwise, normalizes the mouse
+        position into the vertical space that _compute_vertical_scaling operates in, then applies
+        the analytical inverse to find the corresponding grid row index.
 
         Args:
             my: The y pixel position of the mouse in the pygame window.
@@ -248,13 +236,11 @@ class WaterRipples:
         return max(0, min(grid_y, self.number_of_rows - 1))
 
     def _mouse_x_to_grid_x(self, mx: int, grid_y: int) -> int:
-        """
-        Convert a mouse x pixel position to a grid column index.
+        """Convert a mouse x pixel position to a grid column index.
 
-        Uses the given grid row index to look up the x boundaries of that row
-        via _compute_vertical_scaling and trapezoid interpolation, then
-        interpolates the column position within those boundaries. The result
-        is clamped to stay within valid grid column indices.
+        Uses the given grid row index to look up the x boundaries of that row via
+        _compute_vertical_scaling and trapezoid interpolation, then interpolates the column position
+        within those boundaries. The result is clamped to stay within valid grid column indices.
 
         Args:
             mx: The x pixel position of the mouse in the pygame window.
@@ -276,15 +262,13 @@ class WaterRipples:
         return max(0, min(grid_x, self.number_of_columns - 1))
 
     def _handle_mouse(self) -> None:
-        """
-        Create a disturbance at the current mouse position.
+        """Create a disturbance at the current mouse position.
 
-        Converts the mouse position to grid coordinates using _mouse_y_to_grid_y
-        and _mouse_x_to_grid_x, then disturbs a square region of size
-        cursor_splash_size around that grid cell. Returns early if the mouse
-        is outside the trapezoid bounds. The disturbance is clamped to stay
-        within the grid boundaries so that border cells, which are always kept
-        at zero to prevent waves from leaking out, are never disturbed.
+        Converts the mouse position to grid coordinates using _mouse_y_to_grid_y and
+        _mouse_x_to_grid_x, then disturbs a square region of size cursor_splash_size around that
+        grid cell. Returns early if the mouse is outside the trapezoid bounds. The disturbance is
+        clamped to stay within the grid boundaries so that border cells, which are always kept at
+        zero to prevent waves from leaking out, are never disturbed.
         """
         mx, my = pg.mouse.get_pos()
 
@@ -304,21 +288,19 @@ class WaterRipples:
         ] = self.wave_brightness
 
     def _map_state_to_rgba(self) -> np.ndarray:
-        """
-        Maps the current state to an RGBA array of shape (rows, cols, 4).
+        """Maps the current state to an RGBA array of shape (rows, cols, 4).
 
-        The current state values are clipped to [0, 255] and normalized to
-        [0.0, 1.0] before being passed through a matplotlib colormap to produce
-        RGB values. The colormap converts each scalar grid value to a color,
-        giving waves a visual appearance beyond simple grayscale.
+        The current state values are clipped to [0, 255] and normalized to [0.0, 1.0] before being
+        passed through a matplotlib colormap to produce RGB values. The colormap converts each
+        scalar grid value to a color, giving waves a visual appearance beyond simple grayscale.
 
-        The alpha channel is set proportional to wave intensity — flat water
-        is fully transparent and only active waves are visible, which allows
-        the background image to show through where there are no waves.
+        The alpha channel is set proportional to wave intensity — flat water is fully transparent
+        and only active waves are visible, which allows the background image to show through where
+        there are no waves.
 
         Returns:
-            A numpy array of shape (rows, cols, 4) with dtype uint8, containing
-            RGBA values in the range [0, 255].
+            np.ndarray: A numpy array of shape (rows, cols, 4) with dtype uint8, containing RGBA
+                values in the range [0, 255].
         """
         current_state_clipped = np.clip(self.current_state, 0, 255).astype(np.float32)
         normalized_state = current_state_clipped / self.maximum_brightness
@@ -331,31 +313,27 @@ class WaterRipples:
         return np.concatenate([rgb_array, alpha_array[..., np.newaxis]], axis=-1)
 
     def _render_state(self, rgba_array: np.ndarray) -> None:
-        """
-        Render the current RGBA state onto the PyGame screen using per-cell
-        polygon drawing.
+        """Render the current RGBA state onto the PyGame screen using per-cell polygon drawing.
 
-        For each grid cell, a quadrilateral is computed whose four corners are
-        derived from the trapezoid geometry and vertical scaling. The top edge
-        of the cell uses the x boundaries of row y, and the bottom edge uses
-        the x boundaries of row y+1 — both interpolated from the trapezoid's
-        normalized coordinates. This means cells narrow toward the top of the
-        trapezoid and widen toward the bottom, creating the perspective effect.
+        For each grid cell, a quadrilateral is computed whose four corners are derived from the
+        trapezoid geometry and vertical scaling. The top edge of the cell uses the x boundaries of
+        row y, and the bottom edge uses the x boundaries of row y+1 — both interpolated from the
+        trapezoid's normalized coordinates. This means cells narrow toward the top of the trapezoid
+        and widen toward the bottom, creating the perspective effect.
 
-        Before drawing, the center pixel of each cell is checked against the
-        lake mask. Cells whose center falls outside the mask are skipped, so
-        the wave overlay only appears on the lake and not on surrounding terrain.
+        Before drawing, the center pixel of each cell is checked against the lake mask. Cells whose
+        center falls outside the mask are skipped, so the wave overlay only appears on the lake and
+        not on surrounding terrain.
 
-        All cells are drawn onto a transparent SRCALPHA overlay surface rather
-        than directly onto the screen. This allows the alpha channel of each
-        cell — which is proportional to wave intensity — to blend correctly
-        with the background image underneath. Flat water has alpha 0 and is
-        fully transparent, while active wave peaks have alpha 255 and are
-        fully visible. The overlay is blitted onto the screen at the end.
+        All cells are drawn onto a transparent SRCALPHA overlay surface rather than directly onto
+        the screen. This allows the alpha channel of each cell — which is proportional to wave
+        intensity — to blend correctly with the background image underneath. Flat water has alpha 0
+        and is fully transparent, while active wave peaks have alpha 255 and are fully visible. The
+        overlay is blitted onto the screen at the end.
 
         Args:
-            rgba_array: A numpy array of shape (rows, cols, 4) with dtype uint8,
-                containing the RGBA values to render for each grid cell.
+            rgba_array: A numpy array of shape (rows, cols, 4) with dtype uint8, containing the RGBA
+                values to render for each grid cell.
         """
         overlay = pg.Surface((self.window_width, self.window_height), pg.SRCALPHA)
 
@@ -422,26 +400,22 @@ class WaterRipples:
         self.screen.blit(overlay, (0, 0))
 
     def _draw_current_state(self) -> None:
-        """
-        Render the current simulation state to the PyGame window.
+        """Render the current simulation state to the PyGame window.
 
-        This method acts as a thin coordinator between the two steps of
-        visualization: converting the simulation state to an RGBA array via
-        _map_state_to_rgba, and then rendering that array onto the screen via
-        _render_state.
+        This method acts as a thin coordinator between the two steps of visualization: converting
+        the simulation state to an RGBA array via _map_state_to_rgba, and then rendering that array
+        onto the screen via _render_state.
         """
         rgba_array = self._map_state_to_rgba()
         self._render_state(rgba_array=rgba_array)
 
     def execute(self) -> None:
-        """
-        Run the simulation loop until the user exits.
+        """Run the simulation loop until the user exits.
 
-        Each frame, mouse input is checked, the wave equation is propagated
-        one step forward using numba, the two state buffers are swapped, and
-        the current state is rendered to the screen. The clock tick at the end
-        of each frame enforces the target framerate. The loop exits when the
-        user closes the window or presses ESC, after which pygame is cleaned up.
+        Each frame, mouse input is checked, the wave equation is propagated one step forward using
+        numba, the two state buffers are swapped, and the current state is rendered to the screen.
+        The clock tick at the end of each frame enforces the target framerate. The loop exits when
+        the user closes the window or presses ESC, after which pygame is cleaned up.
         """
         running = True
 

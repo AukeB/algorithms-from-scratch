@@ -14,8 +14,7 @@ class ConfigManager:
         self.config_file_path = CONFIG_FILE_PATH
 
     def read_config(self) -> ConfigModel:
-        """
-        Read, validate, and return the config file as a ConfigModel instance.
+        """Read, validate, and return the config file as a ConfigModel instance.
 
         1. Verify the config file exists on disk.
         2. Parse it with yaml.safe_load.

@@ -9,11 +9,10 @@ from src.wave_function_collapse.constants import Dimensions, RGBColor
 
 
 def load_excel_worksheet(excel_file_path: Path, worksheet_index: int = 0) -> Worksheet:
-    """
-    Load an Excel file and return the worksheet at the given index.
+    """Load an Excel file and return the worksheet at the given index.
 
-    Defaults to the first worksheet, which assumes the bitmap occupies
-    the first tab of the Excel file.
+    Defaults to the first worksheet, which assumes the bitmap occupies the first tab of the Excel
+    file.
 
     Args:
         excel_file_path (Path): Path to the .xlsx file to load.
@@ -29,23 +28,22 @@ def load_excel_worksheet(excel_file_path: Path, worksheet_index: int = 0) -> Wor
 
 
 def detect_bitmap_dimensions(worksheet: Worksheet) -> Dimensions:
-    """
-    Detect the dimensions of a bitmap in an Excel worksheet by scanning for cell borders.
+    """Detect the dimensions of a bitmap in an Excel worksheet by scanning for cell borders.
 
-    Scans the first column for a bottom border to determine the number of rows,
-    and the first row for a right border to determine the number of columns.
-    This assumes the bitmap has an outer border drawn around it in Excel.
+    Scans the first column for a bottom border to determine the number of rows, and the first row
+    for a right border to determine the number of columns. This assumes the bitmap has an outer
+    border drawn around it in Excel.
 
     Args:
         worksheet (Worksheet): The worksheet to scan for bitmap dimensions.
 
     Returns:
-        dimensions (Dimensions): A named tuple of (rows, cols) representing the
-            detected bitmap dimensions.
+        dimensions (Dimensions): A named tuple of (rows, cols) representing the detected bitmap
+            dimensions.
 
     Raises:
-        ValueError: If no bottom or right border is detected in the worksheet,
-            indicating the bitmap border is missing or malformed.
+        ValueError: If no bottom or right border is detected in the worksheet, indicating the bitmap
+            border is missing or malformed.
     """
     max_row = max(
         (
@@ -78,16 +76,15 @@ def detect_bitmap_dimensions(worksheet: Worksheet) -> Dimensions:
 def extract_bitmap_from_worksheet(
     worksheet: Worksheet, bitmap_dimensions: Dimensions
 ) -> list[list[RGBColor]]:
-    """
-    Extract cell fill colors from the loaded worksheet as a 2D list of RGB tuples.
+    """Extract cell fill colors from the loaded worksheet as a 2D list of RGB tuples.
 
-    Iterates over the cells within the detected bitmap dimensions and
-    converts each cell's fill color from hex to RGB.
+    Iterates over the cells within the detected bitmap dimensions and converts each cell's fill
+    color from hex to RGB.
 
     Args:
         worksheet (Worksheet): The worksheet to extract bitmap data from.
-        bitmap_dimensions (Dimensions): The row and column extent of the bitmap
-            within the worksheet.
+        bitmap_dimensions (Dimensions): The row and column extent of the bitmap within the
+            worksheet.
 
     Returns:
         bitmap (list[list[RGBColor]]): A 2D list of RGB tuples representing the bitmap.

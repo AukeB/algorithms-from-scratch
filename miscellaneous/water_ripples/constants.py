@@ -27,10 +27,9 @@ IMAGE_PATH = _LAKE_DATA_DIR / "image.jpg"
 MASK_PATH = _LAKE_DATA_DIR / "mask.npy"
 
 # Trapezoid related parameters — Not used in water_ripples.py.
-"""
-This variable defines the normalized coordinates of a trapezoid.
-A trapezoid is a four-side polygon with at least one pair of parallel sides, known as the bases. In
-our case the parallel sides are the two horizontal lines.
+"""This variable defines the normalized coordinates of a trapezoid. A trapezoid is a four-side
+polygon with at least one pair of parallel sides, known as the bases. In our case the parallel sides
+are the two horizontal lines.
 
 - For 'y', 0 corresponds with top of the window, 1 would be the bottom of the window.
 - For 'x', 0 corresponds with the left side of the window, 1 would be the right side.
@@ -45,15 +44,15 @@ NORMALIZED_TRAPEZOID: dict = {
 }
 
 # Only used in water_ripples_trapezoid.py
-"""
-This variable determines the 'amount' of persective you see in the trapezoid window
+"""This variable determines the 'amount' of persective you see in the trapezoid window
 
-Exponent = 0: Completely flat, no perspective at all.
-Exponent = 1 (linear): Equal distribution — every row gets progressively a little taller than the
-    previous, but the difference between rows is constant. Not much perspective feel.
-Exponent = 2 (quadratic): Moderate perspective — rows grow noticeably faster toward the bottom.
-Exponent = 3 (cubic): Strong perspective — rows at the bottom are much taller than rows at the top.
-Exponent > 3: Very heavy perspective — the top rows become extremely compressed, almost invisible,
-    and the bottom rows dominate. Can look unrealistic.
+- Exponent = 0: Completely flat, no perspective at all.
+- Exponent = 1 (linear): Equal distribution — every row gets progressively a little taller than the
+  previous, but the difference between rows is constant. Not much perspective feel.
+- Exponent = 2 (quadratic): Moderate perspective — rows grow noticeably faster toward the bottom.
+- Exponent = 3 (cubic): Strong perspective — rows at the bottom are much taller than rows at the
+  top.
+- Exponent > 3: Very heavy perspective — the top rows become extremely compressed, almost invisible,
+  and the bottom rows dominate. Can look unrealistic.
 """
 PERSPECTIVE_EXPONENT = 1

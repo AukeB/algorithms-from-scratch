@@ -10,8 +10,8 @@ def get_window_size_from_screen_resolution(
     min_width: int = 400,
     min_height: int = 300,
 ) -> tuple[int, int]:
-    """
-    Compute a windowed (non-fullscreen) size as a fraction of the primary desktop resolution.
+    """Compute a windowed (non-fullscreen) size as a fraction of the primary desktop
+    resolution.
 
     1. Initialise the pygame display module if not already active.
     2. Attempt to read the desktop resolution via get_desktop_sizes() (pygame >= 2.0).
@@ -46,16 +46,15 @@ def get_window_size_from_screen_resolution(
 
 
 def lerp_color(color_value: RGBColor, noise_value: float) -> RGBColor:
-    """
-    Linearly interpolate from a base color to a target color.
+    """Linearly interpolate from a base color to a target color.
 
-    The interpolation uses a fixed base color (white) and blends it
-    toward the provided target color based on a noise-derived scalar.
+    The interpolation uses a fixed base color (white) and blends it toward the provided
+    target color based on a noise-derived scalar.
 
     Args:
         color_value (tuple): RGB target color.
-        noise_value (float): Normalized scalar in range [0, 1]
-            representing intensity (e.g., noise or normalized value).
+        noise_value (float): Normalized scalar in range [0, 1] representing intensity
+            (e.g., noise or normalized value).
 
     Returns:
         tuple: Interpolated RGB color.
@@ -69,8 +68,7 @@ def lerp_color(color_value: RGBColor, noise_value: float) -> RGBColor:
 
 
 def smooth_perline_polyominal(t: float, smoothing_version: str) -> float:  # type: ignore
-    """
-    Compute Perlin smoothing for a given value.
+    """Compute Perlin smoothing for a given value.
 
     Args:
         t (float): Input value in the range [0, 1].

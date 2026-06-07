@@ -10,8 +10,7 @@ def window_size_from_screen(
     min_width: int = 400,
     min_height: int = 300,
 ) -> tuple[int, int]:
-    """
-    Compute a windowed (non-fullscreen) size as a fraction of the primary desktop resolution.
+    """Compute a windowed (non-fullscreen) size as a fraction of the primary desktop resolution.
 
     1. Initialise the pygame display module if not already active.
     2. Attempt to read the desktop resolution via get_desktop_sizes() (pygame >= 2.0).
@@ -51,26 +50,22 @@ def resolve_window_and_grid(
     number_of_columns: int,
     number_of_rows: int | None,
 ) -> tuple[int, int, int]:
-    """
-    Resolve window size and row count for the simulation grid.
+    """Resolve window size and row count for the simulation grid.
 
-    If both window_width and window_height are None, uses window_size_from_screen().
-    If both are set, uses those values. If only one is set, raises ValueError.
-    If number_of_rows is None, sets it from the window aspect ratio and
-    number_of_columns.
+    If both window_width and window_height are None, uses window_size_from_screen(). If both are
+    set, uses those values. If only one is set, raises ValueError. If number_of_rows is None, sets
+    it from the window aspect ratio and number_of_columns.
 
     Args:
-        window_width (int | None): The desired window width in pixels, or None
-            for automatic sizing.
-        window_height (int | None): The desired window height in pixels, or None
-            for automatic sizing.
+        window_width (int | None): The desired window width in pixels, or None for automatic sizing.
+        window_height (int | None): The desired window height in pixels, or None for automatic
+            sizing.
         number_of_columns (int): The number of columns in the simulation grid.
-        number_of_rows (int | None): The number of rows in the simulation grid,
-            or None to derive it from the window aspect ratio.
+        number_of_rows (int | None): The number of rows in the simulation grid, or None to derive it
+            from the window aspect ratio.
 
     Returns:
-        tuple[int, int, int]: The resolved window width, window height, and
-            number of rows.
+        tuple[int, int, int]: The resolved window width, window height, and number of rows.
 
     Raises:
         ValueError: If exactly one of window_width or window_height is None.
@@ -90,8 +85,7 @@ def resolve_window_and_grid(
 
 
 def resize_bool_mask_nearest(mask: np.ndarray, out_h: int, out_w: int) -> np.ndarray:
-    """
-    Scale a 2D boolean mask to (out_h, out_w) with nearest-neighbor sampling.
+    """Scale a 2D boolean mask to (out_h, out_w) with nearest-neighbor sampling.
 
     Args:
         mask (np.ndarray): A 2D boolean array to resize.

@@ -32,8 +32,7 @@ class VisibilityState:
 
     @classmethod
     def from_buttons(cls, buttons: ButtonState) -> "VisibilityState":
-        """
-        Construct a VisibilityState by reading the current state of each button.
+        """Construct a VisibilityState by reading the current state of each button.
 
         Args:
             buttons (ButtonState): The registered toggle buttons.
@@ -49,18 +48,18 @@ class VisibilityState:
 
 
 class PNVisualizer:
-    """ """
+    """"""
 
     def __init__(
         self,
         config: ConfigModel,
     ) -> None:
-        """
-        Initialize pygame and configure the visualizer for the given grid.
+        """Initialize pygame and configure the visualizer for the given grid.
 
         Args:
             config (ConfigModel): The validated configuration model.
-            margin_size (int): Pixel margin around the grid on all sides, defaults to 20.
+            margin_size (int): Pixel margin around the grid on all sides, defaults to
+                20.
         """
         # Extract relevant variables from configuration variable.
         self.margin_size = config.visualization.margin_size
@@ -121,12 +120,11 @@ class PNVisualizer:
             )
 
     def _draw_gradient_vectors(self, gradient_grid: np.ndarray) -> None:
-        """
-        Draw each grid node as a point and its gradient vector as an arrow.
+        """Draw each grid node as a point and its gradient vector as an arrow.
 
         Args:
-            grid (np.ndarray): Array of shape (rows, cols, 2) containing a unit
-                gradient vector at each grid node.
+            grid (np.ndarray): Array of shape (rows, cols, 2) containing a unit gradient
+                vector at each grid node.
         """
         for row, row_data in enumerate(gradient_grid):
             for col, gradient in enumerate(row_data):
@@ -153,11 +151,10 @@ class PNVisualizer:
                 )
 
     def _draw_noise_cells(self, noise_grid: np.ndarray) -> None:
-        """
-        Draw the scalar noise grid as colored square cells.
+        """Draw the scalar noise grid as colored square cells.
 
-        Negative values map toward blue, positive toward red,
-        and values near zero toward white.
+        Negative values map toward blue, positive toward red, and values near zero
+        toward white.
 
         Args:
             noise_grid (np.ndarray): 2D array of scalar noise values.
@@ -193,8 +190,7 @@ class PNVisualizer:
                 pg.draw.rect(self.screen, color, rect)
 
     def register_buttons(self) -> ButtonState:
-        """
-        Register all visualization toggle buttons with the GUI panel.
+        """Register all visualization toggle buttons with the GUI panel.
 
         Returns:
             buttons (ButtonState): The registered toggle buttons.
@@ -211,12 +207,11 @@ class PNVisualizer:
         noise_grid: np.ndarray,
         visibility: VisibilityState,
     ) -> None:
-        """
-        Render a single frame of the Perlin noise visualization.
+        """Render a single frame of the Perlin noise visualization.
 
         Args:
-            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) containing
-                unit gradient vectors at each grid node.
+            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) containing unit
+                gradient vectors at each grid node.
             noise_grid (np.ndarray): 2D array of scalar noise values.
             visibility (VisibilityState): Flags controlling which layers are drawn.
         """

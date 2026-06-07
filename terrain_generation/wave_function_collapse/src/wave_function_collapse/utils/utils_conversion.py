@@ -4,8 +4,7 @@ from src.wave_function_collapse.constants import RGBColor
 
 
 def hex_to_rgb(color_hex: str) -> RGBColor:
-    """
-    Convert a 6-character hex color string to an RGB tuple.
+    """Convert a 6-character hex color string to an RGB tuple.
 
     1. Extract the red, green, and blue components from the hex string.
     2. Convert each component from base-16 to an integer.

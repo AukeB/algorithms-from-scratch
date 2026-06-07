@@ -11,13 +11,11 @@ from src.wave_function_collapse.constants import Size, Dimensions, RGBColor
 
 
 class WFCVisualizer:
-    """
-    Renders the WFC grid and tile debug views to a pygame window.
+    """Renders the WFC grid and tile debug views to a pygame window.
 
-    Handles all visual output for the algorithm, including the main grid
-    visualization during collapse, a tile overview for inspecting extracted
-    tiles and their weights, and a neighbor debug view for inspecting valid
-    adjacencies per direction.
+    Handles all visual output for the algorithm, including the main grid visualization during
+    collapse, a tile overview for inspecting extracted tiles and their weights, and a neighbor debug
+    view for inspecting valid adjacencies per direction.
     """
 
     def __init__(
@@ -28,8 +26,7 @@ class WFCVisualizer:
         color_mapping: dict[RGBColor, str],
         margin_size: int = 20,
     ) -> None:
-        """
-        Initialise pygame and configure the visualizer for the given grid.
+        """Initialise pygame and configure the visualizer for the given grid.
 
         Args:
             config (ConfigModel): The validated configuration model.
@@ -61,18 +58,17 @@ class WFCVisualizer:
         inner_margin: int = 0,
         square_grid: bool = True,
     ) -> tuple[Size, Size]:
-        """
-        Compute the pixel dimensions of a single tile and a single cell.
+        """Compute the pixel dimensions of a single tile and a single cell.
 
-        Tile size is derived from the available screen space divided by the
-        grid dimensions. Cell size is the tile size divided by the tile
-        dimensions, with an optional inner margin subtracted first.
+        Tile size is derived from the available screen space divided by the grid dimensions. Cell
+        size is the tile size divided by the tile dimensions, with an optional inner margin
+        subtracted first.
 
         Args:
-            inner_margin (int): Pixel margin subtracted from tile size before
-                dividing into cells, defaults to 0.
-            square_grid (bool): If True, tile width is derived from screen height
-                to ensure square tiles regardless of aspect ratio, defaults to True.
+            inner_margin (int): Pixel margin subtracted from tile size before dividing into cells,
+                defaults to 0.
+            square_grid (bool): If True, tile width is derived from screen height to ensure square
+                tiles regardless of aspect ratio, defaults to True.
 
         Returns:
             sizes (tuple[Size, Size]): A tuple of (tile_size, cell_size) in pixels.
@@ -103,14 +99,13 @@ class WFCVisualizer:
     def _compute_tile_position(
         self, row_tile_idx: int | float, col_tile_idx: int | float
     ) -> tuple[int, int]:
-        """
-        Compute the pixel position of a tile's top-left corner on the screen.
+        """Compute the pixel position of a tile's top-left corner on the screen.
 
         Args:
-            row_tile_idx (int | float): The row index of the tile in the grid.
-                Accepts float to support fractional positioning in debug views.
-            col_tile_idx (int | float): The column index of the tile in the grid.
-                Accepts float to support fractional positioning in debug views.
+            row_tile_idx (int | float): The row index of the tile in the grid. Accepts float to
+                support fractional positioning in debug views.
+            col_tile_idx (int | float): The column index of the tile in the grid. Accepts float to
+                support fractional positioning in debug views.
 
         Returns:
             position (tuple[int, int]): A (y, x) pixel position tuple.
@@ -123,14 +118,12 @@ class WFCVisualizer:
         return position
 
     def _draw_tile(self, cell: GridCell, y: int, x: int) -> None:
-        """
-        Draw a single grid cell as a filled rectangle at pixel position (x, y).
+        """Draw a single grid cell as a filled rectangle at pixel position (x, y).
 
-        If the cell has collapsed, the character at the center of the tile value
-        is resolved to an RGB color via the inverted color mapping. If uncollapsed
-        and show_superposition is True, the center pixel of the superposition tile
-        is used. If uncollapsed and show_superposition is False, the grid background
-        color is used instead.
+        If the cell has collapsed, the character at the center of the tile value is resolved to an
+        RGB color via the inverted color mapping. If uncollapsed and show_superposition is True, the
+        center pixel of the superposition tile is used. If uncollapsed and show_superposition is
+        False, the grid background color is used instead.
 
         Args:
             cell (GridCell): The grid cell to draw.
@@ -148,12 +141,11 @@ class WFCVisualizer:
         pg.draw.rect(self.screen, cell_value, cell_rect)
 
     def visualize(self, grid: list[list[GridCell]]) -> None:
-        """
-        Render the current state of the WFC grid to the pygame window.
+        """Render the current state of the WFC grid to the pygame window.
 
-        Clears the screen, draws each grid cell at its computed pixel position,
-        flips the display buffer to make the frame visible, then polls for quit
-        events — exiting cleanly on window close or the Escape key.
+        Clears the screen, draws each grid cell at its computed pixel position, flips the display
+        buffer to make the frame visible, then polls for quit events — exiting cleanly on window
+        close or the Escape key.
 
         Args:
             grid (list[list[GridCell]]): The 2D grid of GridCell instances to render.

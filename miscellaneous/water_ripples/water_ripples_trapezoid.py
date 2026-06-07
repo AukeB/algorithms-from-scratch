@@ -67,21 +67,17 @@ class WaterRipples:
         normalized_trapezoid: dict = NORMALIZED_TRAPEZOID,
         perspective_exponent: float = PERSPECTIVE_EXPONENT,
     ) -> None:
-        """
-        Initialize the ripple simulation class.
+        """Initialize the ripple simulation class.
 
-        The simulation maintains two grids (previous_state and current_state).
-        At each step, values propagate from the previous grid to the current
-        grid, and then the grids are swapped.
+        The simulation maintains two grids (previous_state and current_state). At each step, values
+        propagate from the previous grid to the current grid, and then the grids are swapped.
 
         Args:
-            window_width: Window width in pixels, or None for ~90% of desktop
-                (windowed).
+            window_width: Window width in pixels, or None for ~90% of desktop (windowed).
             window_height: Window height in pixels, or None with window_width.
             number_of_columns: Number of columns in the simulation grid.
             number_of_rows: Number of rows, or None for aspect-matched grid.
-            damping: Factor between 0 and 1 that reduces wave amplitude each
-                frame.
+            damping: Factor between 0 and 1 that reduces wave amplitude each frame.
             wave_brightness: Intensity value for the waves.
             maximum_brightness: Maximum brightness the visualization can display.
             cursor_splash_size: The size of the splash when clicking.
@@ -141,39 +137,36 @@ class WaterRipples:
         self.clock = pg.time.Clock()
 
     def _compute_row_geometry(self) -> list[dict]:
-        """
-        Precomputes pixel geometry for each row — y position and x boundaries.
-        Both are derived from the same vertical scaling, ensuring consistency.
+        """Precomputes pixel geometry for each row — y position and x boundaries. Both are derived
+        from the same vertical scaling, ensuring consistency.
 
-        The perspective effect is achieved by assigning each row a weight of
-        (i + 1) ** perspective_exponent, where i is the row index. This means
-        rows at the bottom get a larger weight and therefore more pixels in the
-        y direction than rows at the top, simulating depth. An exponent of 0
-        gives equal row heights, 1 is linear, 2 is quadratic, and so on — the
+        The perspective effect is achieved by assigning each row a weight of (i + 1) **
+        perspective_exponent, where i is the row index. This means rows at the bottom get a larger
+        weight and therefore more pixels in the y direction than rows at the top, simulating depth.
+        An exponent of 0 gives equal row heights, 1 is linear, 2 is quadratic, and so on — the
         higher the exponent, the more dramatic the perspective effect.
 
-        These weights are converted to normalized boundary positions t_values,
-        where t is an interpolation parameter running from 0.0 (top of the
-        trapezoid) to 1.0 (bottom of the trapezoid). Each t value represents
-        how far along the trapezoid a row boundary sits. These t values are
-        then used to interpolate both the y pixel positions and the x boundaries
-        of each row within the trapezoid.
+        These weights are converted to normalized boundary positions t_values, where t is an
+        interpolation parameter running from 0.0 (top of the trapezoid) to 1.0 (bottom of the
+        trapezoid). Each t value represents how far along the trapezoid a row boundary sits. These t
+        values are then used to interpolate both the y pixel positions and the x boundaries of each
+        row within the trapezoid.
 
-        The result is stored in geometry — a list of dicts, one per row, each
-        containing the pixel coordinates of that row's bounding rectangle:
+        The result is stored in geometry — a list of dicts, one per row, each containing the pixel
+        coordinates of that row's bounding rectangle:
         - y_top: top pixel position of the row in the pygame window
         - y_bottom: bottom pixel position of the row in the pygame window
-        - x_left: left pixel position of the row, interpolated between
-            x_top_left and x_bottom_left of the trapezoid
-        - x_right: right pixel position of the row, interpolated between
-            x_top_right and x_bottom_right of the trapezoid
+        - x_left: left pixel position of the row, interpolated between x_top_left and x_bottom_left
+          of the trapezoid
+        - x_right: right pixel position of the row, interpolated between x_top_right and
+          x_bottom_right of the trapezoid
 
-        This is computed once at startup and reused every frame, so there are
-        no geometry calculations in the main loop.
+        This is computed once at startup and reused every frame, so there are no geometry
+        calculations in the main loop.
 
         Returns:
-            gemeotry (list): List of dicts with keys y_top, y_bottom, x_left, x_right per row,
-            in pixel coordinates relative to the pygame window.
+            gemeotry (list): List of dicts with keys y_top, y_bottom, x_left, x_right per row, in
+                pixel coordinates relative to the pygame window.
         """
         weights = [
             (i + 1) ** self.perspective_exponent for i in range(self.number_of_rows)
@@ -221,20 +214,18 @@ class WaterRipples:
         return geometry
 
     def _mouse_x_to_grid_x(self, mx: int, grid_y: int) -> int:
-        """
-        Find the grid column corresponding to a mouse x pixel position.
+        """Find the grid column corresponding to a mouse x pixel position.
 
-        This method is needed because the grid columns are not uniformly distributed
-        over the pygame window — due to the trapezoid shape, each row has its own
-        x_left and x_right boundaries. A simple division like `mx // grid_cell_width`
-        would only work if the grid spanned the full window width uniformly. Instead,
-        we look up the x boundaries of the given row from row_geometry and interpolate
-        the column position within those boundaries. The result is clamped to stay
-        within valid grid column indices.
+        This method is needed because the grid columns are not uniformly distributed over the pygame
+        window — due to the trapezoid shape, each row has its own x_left and x_right boundaries. A
+        simple division like `mx // grid_cell_width` would only work if the grid spanned the full
+        window width uniformly. Instead, we look up the x boundaries of the given row from
+        row_geometry and interpolate the column position within those boundaries. The result is
+        clamped to stay within valid grid column indices.
 
         Args:
-            mx: The x pixel position of the mouse in the pygame window.
-            grid_y: The grid row index, needed to look up that row's x boundaries.
+            mx (int): The x pixel position of the mouse in the pygame window.
+            grid_y (int): The grid row index, needed to look up that row's x boundaries.
 
         Returns:
             The grid column index corresponding to the mouse x position.
@@ -246,22 +237,20 @@ class WaterRipples:
         return max(0, min(grid_x, self.number_of_columns - 1))
 
     def _mouse_y_to_grid_y(self, my: int) -> int:
-        """
-        Find the grid row corresponding to a mouse y pixel position.
+        """Find the grid row corresponding to a mouse y pixel position.
 
-        This method is needed because the grid rows are not uniformly distributed
-        over the pygame window — due to the perspective scaling, rows at the top
-        are smaller and rows at the bottom are larger. A simple division like
-        `my // grid_cell_height` would only work if all rows had equal height.
-        Instead, we look up which row's pixel range contains the mouse y position
-        using the precomputed row_geometry. If the mouse is below all rows, we
-        clamp to the last row.
+        This method is needed because the grid rows are not uniformly distributed over the pygame
+        window — due to the perspective scaling, rows at the top are smaller and rows at the bottom
+        are larger. A simple division like `my // grid_cell_height` would only work if all rows had
+        equal height. Instead, we look up which row's pixel range contains the mouse y position
+        using the precomputed row_geometry. If the mouse is below all rows, we clamp to the last
+        row.
 
         Args:
-            my: The y pixel position of the mouse in the pygame window.
+            my (int): The y pixel position of the mouse in the pygame window.
 
         Returns:
-            The grid row index corresponding to the mouse y position.
+            int: The grid row index corresponding to the mouse y position.
         """
         for grid_y, geom in enumerate(self.row_geometry):
             if geom["y_top"] <= my < geom["y_bottom"]:
@@ -270,17 +259,14 @@ class WaterRipples:
         return self.number_of_rows - 1
 
     def _handle_mouse(self) -> None:
-        """
-        Create a disturbance at the current mouse position.
+        """Create a disturbance at the current mouse position.
 
-        The mouse position is converted to grid coordinates using
-        `_mouse_y_to_grid_y` for the y axis (which accounts for the perspective
-        scaling) and a simple division for the x axis (which is uniform).
-        A square region of size cursor_splash_size around the grid cell is
-        disturbed rather than a single cell, to make the splash more visible.
-        The disturbance is clamped to stay within the grid boundaries so that
-        the border cells, which are always kept at zero to prevent waves from
-        leaking out, are never disturbed.
+        The mouse position is converted to grid coordinates using `_mouse_y_to_grid_y` for the y
+        axis (which accounts for the perspective scaling) and a simple division for the x axis
+        (which is uniform). A square region of size cursor_splash_size around the grid cell is
+        disturbed rather than a single cell, to make the splash more visible. The disturbance is
+        clamped to stay within the grid boundaries so that the border cells, which are always kept
+        at zero to prevent waves from leaking out, are never disturbed.
         """
         mx, my = pg.mouse.get_pos()
         grid_y = self._mouse_y_to_grid_y(my)
@@ -296,20 +282,18 @@ class WaterRipples:
         ] = self.wave_brightness
 
     def _map_state_to_rgba(self) -> np.ndarray:
-        """
-        Maps the current state to an RGBA array of shape (rows, cols, 4).
+        """Maps the current state to an RGBA array of shape (rows, cols, 4).
 
-        The current state values are clipped to [0, 255] and normalized to
-        [0.0, 1.0] before being passed through a matplotlib colormap to produce
-        RGB values. The colormap converts each scalar grid value to a color,
-        giving waves a visual appearance beyond simple grayscale.
+        The current state values are clipped to [0, 255] and normalized to [0.0, 1.0] before being
+        passed through a matplotlib colormap to produce RGB values. The colormap converts each
+        scalar grid value to a color, giving waves a visual appearance beyond simple grayscale.
 
-        The alpha channel is set to 255 for all cells, making the entire grid
-        fully opaque at all times.
+        The alpha channel is set to 255 for all cells, making the entire grid fully opaque at all
+        times.
 
         Returns:
-            A numpy array of shape (rows, cols, 4) with dtype uint8, containing
-            RGBA values in the range [0, 255].
+            np.ndarray: A numpy array of shape (rows, cols, 4) with dtype uint8, containing RGBA
+                values in the range [0, 255].
         """
         current_state_clipped = np.clip(self.current_state, 0, 255).astype(np.float32)
         normalized_state = current_state_clipped / self.maximum_brightness
@@ -324,15 +308,13 @@ class WaterRipples:
         return np.concatenate([rgb_array, alpha_array[..., np.newaxis]], axis=-1)
 
     def _render_state(self, rgba_array: np.ndarray) -> None:
-        """
-        Render the current RGBA state onto the PyGame screen.
+        """Render the current RGBA state onto the PyGame screen.
 
-        Each row is rendered as a 1-pixel-tall surface of width number_of_columns,
-        which is then scaled to the row's actual pixel dimensions as defined by
-        row_geometry. This gives smaller rows at the top and larger rows at the
-        bottom, creating the perspective effect. Blitting each row at its correct
-        x_left position also creates the trapezoid shape, where rows narrow toward
-        the top. Rows with zero height or width are skipped to avoid pygame errors.
+        Each row is rendered as a 1-pixel-tall surface of width number_of_columns, which is then
+        scaled to the row's actual pixel dimensions as defined by row_geometry. This gives smaller
+        rows at the top and larger rows at the bottom, creating the perspective effect. Blitting
+        each row at its correct x_left position also creates the trapezoid shape, where rows narrow
+        toward the top. Rows with zero height or width are skipped to avoid pygame errors.
         """
         self.screen.fill(self.background_color)
 
@@ -358,26 +340,22 @@ class WaterRipples:
             self.screen.blit(row_surface, (x_left, y_top))
 
     def _draw_current_state(self) -> None:
-        """
-        Render the current simulation state to the PyGame window.
+        """Render the current simulation state to the PyGame window.
 
-        This method acts as a thin coordinator between the two steps of
-        visualization: converting the simulation state to an RGBA array via
-        _map_state_to_rgba, and then rendering that array onto the screen via
-        _render_state.
+        This method acts as a thin coordinator between the two steps of visualization: converting
+        the simulation state to an RGBA array via _map_state_to_rgba, and then rendering that array
+        onto the screen via _render_state.
         """
         rgba_array = self._map_state_to_rgba()
         self._render_state(rgba_array=rgba_array)
 
     def execute(self) -> None:
-        """
-        Run the simulation loop until the user exits.
+        """Run the simulation loop until the user exits.
 
-        Each frame, mouse input is checked, the wave equation is propagated
-        one step forward using numba, the two state buffers are swapped, and
-        the current state is rendered to the screen. The clock tick at the end
-        of each frame enforces the target framerate. The loop exits when the
-        user closes the window or presses ESC, after which pygame is cleaned up.
+        Each frame, mouse input is checked, the wave equation is propagated one step forward using
+        numba, the two state buffers are swapped, and the current state is rendered to the screen.
+        The clock tick at the end of each frame enforces the target framerate. The loop exits when
+        the user closes the window or presses ESC, after which pygame is cleaned up.
         """
         running = True
 

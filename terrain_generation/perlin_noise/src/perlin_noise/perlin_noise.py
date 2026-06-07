@@ -15,8 +15,7 @@ class PerlinNoise:
     """Manages the Perlin noise gradient grid and exposes noise sampling."""
 
     def __init__(self, config: ConfigModel) -> None:
-        """
-        Unpack config and initialize the gradient grid.
+        """Unpack config and initialize the gradient grid.
 
         Args:
             config (ConfigModel): Configuration settings as a Pydantic model.
@@ -46,16 +45,15 @@ class PerlinNoise:
         self.buttons = self.pn_visualizer.register_buttons()
 
     def _populate_gradient_grid(self) -> np.ndarray:
-        """
-        Populate a grid of random unit gradient vectors at each node.
+        """Populate a grid of random unit gradient vectors at each node.
 
-        Each node sits at an integer coordinate corner. A random angle is
-        sampled uniformly from [0, 2π) and projected onto the unit circle
-        via cos/sin, producing a unit gradient vector at every node.
+        Each node sits at an integer coordinate corner. A random angle is sampled
+        uniformly from [0, 2π) and projected onto the unit circle via cos/sin, producing
+        a unit gradient vector at every node.
 
         Returns:
-            grid (np.ndarray): Array of shape (rows, cols, 2) containing
-                a unit gradient vector at each grid node.
+            grid (np.ndarray): Array of shape (rows, cols, 2) containing a unit gradient
+                vector at each grid node.
         """
         angles = self.rng.uniform(0, 2 * np.pi, self.gradient_grid_dimensions)
         gradient_grid = np.stack([np.cos(angles), np.sin(angles)], axis=-1)
@@ -63,8 +61,8 @@ class PerlinNoise:
         return gradient_grid
 
     def _compute_noise_grid(self, interpolate: bool = True) -> np.ndarray:
-        """
-        Compute the dot product between gradient vectors and offset vectors for each sample point.
+        """Compute the dot product between gradient vectors and offset vectors for each
+        sample point.
 
         1. Iterate over every sample point in the noise grid.
         2. Determine which grid cell the sample point falls in.
@@ -73,8 +71,8 @@ class PerlinNoise:
         5. Compute the dot product of each corner's gradient with its offset vector.
 
         Returns:
-            noise_grid (np.ndarray): Array of shape (rows, cols) containing
-                the dot product value at each sample point.
+            noise_grid (np.ndarray): Array of shape (rows, cols) containing the dot
+                product value at each sample point.
         """
         noise_grid = np.zeros(self.noise_grid_dimensions)
 
@@ -133,12 +131,11 @@ class PerlinNoise:
         self.noise_grid = self._compute_noise_grid()
 
     def run(self) -> None:
-        """
-        Own the pygame event loop and orchestrate generation and rendering.
+        """Own the pygame event loop and orchestrate generation and rendering.
 
         Calls generate() once on startup, then re-calls it whenever the regenerate
-        button is toggled. Rendering and visibility are delegated to draw_frame()
-        each iteration.
+        button is toggled. Rendering and visibility are delegated to draw_frame() each
+        iteration.
         """
         self.generate()
 

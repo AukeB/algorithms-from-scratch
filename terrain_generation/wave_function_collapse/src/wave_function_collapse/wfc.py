@@ -13,13 +13,12 @@ from src.wave_function_collapse.constants import Dimensions, RGBColor, DIRECTION
 
 
 class WaveFunctionCollapse:
-    """
-    Implements the Wave Function Collapse algorithm on a 2D grid.
+    """Implements the Wave Function Collapse algorithm on a 2D grid.
 
-    The algorithm extracts all possible tiles and their frequencies from an
-    input bitmap, then iteratively collapses grid cells to a single tile by
-    choosing the cell with the lowest entropy, selecting a tile weighted by
-    frequency, and propagating the resulting constraints to neighboring cells.
+    The algorithm extracts all possible tiles and their frequencies from an input bitmap, then
+    iteratively collapses grid cells to a single tile by choosing the cell with the lowest entropy,
+    selecting a tile weighted by frequency, and propagating the resulting constraints to neighboring
+    cells.
     """
 
     def __init__(
@@ -28,8 +27,7 @@ class WaveFunctionCollapse:
         bitmap: list[list[str]],
         color_mapping: dict[RGBColor, str],
     ) -> None:
-        """
-        Initialise the WFC algorithm with the input bitmap and configuration.
+        """Initialise the WFC algorithm with the input bitmap and configuration.
 
         1. Store the config, bitmap, dimensions, and color mapping.
         2. Validate that the tile dimensions do not exceed the bitmap dimensions.
@@ -71,12 +69,10 @@ class WaveFunctionCollapse:
         )
 
     def _validate_tile_and_bitmap_dimensions(self) -> None:
-        """
-        Validate that the tile dimensions do not exceed the bitmap dimensions.
+        """Validate that the tile dimensions do not exceed the bitmap dimensions.
 
         Raises:
-            ValueError: If either tile dimension is larger than the smallest
-                bitmap dimension.
+            ValueError: If either tile dimension is larger than the smallest bitmap dimension.
         """
         min_bitmap_dim = min(self.bitmap_dimensions.cols, self.bitmap_dimensions.rows)
 
@@ -91,11 +87,10 @@ class WaveFunctionCollapse:
             )
 
     def _extract_tile(self, x: int, y: int) -> Tile:
-        """
-        Extract a tile from the bitmap at position (x, y) with wrapping.
+        """Extract a tile from the bitmap at position (x, y) with wrapping.
 
-        Wrapping ensures that tiles can be extracted from the edges of the
-        bitmap without going out of bounds, treating the bitmap as a torus.
+        Wrapping ensures that tiles can be extracted from the edges of the bitmap without going out
+        of bounds, treating the bitmap as a torus.
 
         Args:
             x (int): The column index of the top-left corner of the tile.
@@ -119,11 +114,10 @@ class WaveFunctionCollapse:
         return tile
 
     def _compute_tiles_and_weights(self) -> tuple[dict[Tile, float], list[Tile]]:
-        """
-        Extract all tiles from the bitmap and compute their frequency weights.
+        """Extract all tiles from the bitmap and compute their frequency weights.
 
-        Each tile's weight is its number of occurrences divided by the total
-        number of tile positions in the bitmap, giving a normalized frequency.
+        Each tile's weight is its number of occurrences divided by the total number of tile
+        positions in the bitmap, giving a normalized frequency.
 
         1. Count occurrences of each tile across all bitmap positions.
         2. Collect all extracted tiles in order.
@@ -131,8 +125,8 @@ class WaveFunctionCollapse:
         4. Return the weights dict and the full ordered tile list.
 
         Returns:
-            result (tuple[dict[Tile, float], list[Tile]]): A tuple of the tile
-                weights dict and the ordered list of all extracted tiles.
+            result (tuple[dict[Tile, float], list[Tile]]): A tuple of the tile weights dict and the
+                ordered list of all extracted tiles.
         """
         tile_count: Counter = Counter()
         total_occurrences = self.bitmap_dimensions.rows * self.bitmap_dimensions.cols
@@ -152,16 +146,15 @@ class WaveFunctionCollapse:
         return tile_weights, all_tiles
 
     def _compute_neighbors(self) -> defaultdict:
-        """
-        Compute the set of valid neighboring tiles for each tile in each direction.
+        """Compute the set of valid neighboring tiles for each tile in each direction.
 
-        Two tiles are valid neighbors in a direction if the overlapping slice of
-        one tile matches the overlapping slice of the other. For example, a tile
-        is a valid upward neighbor if its down slice matches the other tile's up slice.
+        Two tiles are valid neighbors in a direction if the overlapping slice of one tile matches
+        the overlapping slice of the other. For example, a tile is a valid upward neighbor if its
+        down slice matches the other tile's up slice.
 
         Returns:
-            neighbors (defaultdict): A nested defaultdict mapping each tile to a
-                dict of directions, each containing the set of valid neighbor tiles.
+            neighbors (defaultdict): A nested defaultdict mapping each tile to a dict of directions,
+                each containing the set of valid neighbor tiles.
         """
         neighbors: defaultdict = defaultdict(lambda: defaultdict(set))
 
@@ -179,8 +172,7 @@ class WaveFunctionCollapse:
         return neighbors
 
     def _initialize_grid(self) -> list[list[GridCell]]:
-        """
-        Initialise the grid with a GridCell for each position, with all tiles as options.
+        """Initialise the grid with a GridCell for each position, with all tiles as options.
 
         Returns:
             grid (list[list[GridCell]]): A 2D list of GridCell instances.
@@ -201,13 +193,12 @@ class WaveFunctionCollapse:
         return grid
 
     def propagate(self, y: int, x: int, recursion_depth: int) -> None:
-        """
-        Recursively propagate tile constraints outward from cell (y, x).
+        """Recursively propagate tile constraints outward from cell (y, x).
 
-        Starting from a collapsed or updated cell, this method intersects each
-        neighbor's tile options with the set of tiles that are valid in that
-        direction, then recurses into each updated neighbor. Recursion depth
-        controls how far constraints spread in a single propagation pass.
+        Starting from a collapsed or updated cell, this method intersects each neighbor's tile
+        options with the set of tiles that are valid in that direction, then recurses into each
+        updated neighbor. Recursion depth controls how far constraints spread in a single
+        propagation pass.
 
         1. Return immediately if the recursion depth is exhausted.
         2. For each direction, compute the set of tiles valid in that direction.
@@ -261,8 +252,7 @@ class WaveFunctionCollapse:
                 self.grid[y][x].propagated = False
 
     def _collapse_grid_cell(self, y: int, x: int, tile: Tile) -> None:
-        """
-        Collapse the grid cell at (y, x) to a single tile.
+        """Collapse the grid cell at (y, x) to a single tile.
 
         Args:
             y (int): The row index of the cell to collapse.
@@ -275,12 +265,11 @@ class WaveFunctionCollapse:
         self.grid[y][x].superposition_tile = None
 
     def collapse_grid(self) -> None:
-        """
-        Run the WFC algorithm until all grid cells are collapsed.
+        """Run the WFC algorithm until all grid cells are collapsed.
 
-        Iteratively selects the uncollapsed cell with the fewest remaining tile
-        options (lowest entropy), collapses it to a weighted random tile, and
-        propagates the resulting constraints to its neighbors.
+        Iteratively selects the uncollapsed cell with the fewest remaining tile options (lowest
+        entropy), collapses it to a weighted random tile, and propagates the resulting constraints
+        to its neighbors.
 
         1. Find all uncollapsed cells with the minimum number of remaining options.
         2. If no uncollapsed cells remain, pause briefly and exit.

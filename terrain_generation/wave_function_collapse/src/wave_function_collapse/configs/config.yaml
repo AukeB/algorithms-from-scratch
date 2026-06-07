@@ -6,7 +6,7 @@ general:
   grid_background_color: [50, 50, 50]  # RGB color used for uncollapsed cells when show_superposition is False.
 
 bitmap: # Settings related to the bitmap.
-  input_file_name: mountains.xlsx # Input bitmap file name.
+  input_file_name: network_2.xlsx # Input bitmap file name.
   export: True # Whether the .xlsx bitmap will be exported as a .png.
   export_file_format: .png # File format of the image export.
   cell_size: 30 # Cell width and height in pixels.

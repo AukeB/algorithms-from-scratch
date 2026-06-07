@@ -5,22 +5,21 @@ from src.wave_function_collapse.constants import RGBColor
 
 
 class GridCell:
-    """
-    Represents a single cell in the WFC grid.
+    """Represents a single cell in the WFC grid.
 
-    Each cell starts in a superposition of all possible tiles and progressively
-    collapses to a single tile as the WFC algorithm propagates constraints from
-    neighboring cells. Before collapsing, the cell maintains a weighted average
-    of all its possible tiles as a visual representation of its current state.
+    Each cell starts in a superposition of all possible tiles and progressively collapses to a
+    single tile as the WFC algorithm propagates constraints from neighboring cells. Before
+    collapsing, the cell maintains a weighted average of all its possible tiles as a visual
+    representation of its current state.
 
     Attributes:
         options (set[TileValue]): The set of tiles this cell can still collapse to.
         collapsed (bool): Whether the cell has been collapsed to a single tile.
         tile (TileValue | None): The tile this cell collapsed to, or None if not yet collapsed.
-        superposition_tile (list[list[RGBColor]] | None): The weighted average RGB
-            representation of all current tile options, or None before it is computed.
-        propagated (bool): Whether this cell's constraints have been propagated to
-            its neighbors in the current iteration.
+        superposition_tile (list[list[RGBColor]] | None): The weighted average RGB representation of
+            all current tile options, or None before it is computed.
+        propagated (bool): Whether this cell's constraints have been propagated to its neighbors in
+            the current iteration.
     """
 
     def __init__(
@@ -30,8 +29,7 @@ class GridCell:
         color_mapping: dict[RGBColor, str],
         show_superposition: bool,
     ) -> None:
-        """
-        Initialise the cell with all tiles as options and compute its superposition tile.
+        """Initialise the cell with all tiles as options and compute its superposition tile.
 
         Args:
             tile_set (set[TileValue]): The set of all possible tiles this cell can collapse to.
@@ -51,11 +49,10 @@ class GridCell:
         )
 
     def __repr__(self) -> str:
-        """
-        Return a string representation of the cell's collapsed state.
+        """Return a string representation of the cell's collapsed state.
 
-        Called by repr() and used by debuggers and REPLs. Also serves as the
-        fallback for print() since this class does not define __str__.
+        Called by repr() and used by debuggers and REPLs. Also serves as the fallback for print()
+        since this class does not define __str__.
 
         Returns:
             collapsed_str (str): The string representation of the collapsed flag.
@@ -70,12 +67,11 @@ class GridCell:
         color_mapping: dict[RGBColor, str],
         show_superposition: bool,
     ) -> None:
-        """
-        Compute a weighted average RGB tile across all current tile options.
+        """Compute a weighted average RGB tile across all current tile options.
 
-        Each pixel in the resulting superposition tile is the weighted average
-        of the corresponding pixel across all possible tiles, giving a visual
-        impression of the cell's current state of uncertainty.
+        Each pixel in the resulting superposition tile is the weighted average of the corresponding
+        pixel across all possible tiles, giving a visual impression of the cell's current state of
+        uncertainty.
 
         1. Invert the color mapping so characters can be looked up by RGB value.
         2. Initialise an RGB matrix of zeros with the same dimensions as a tile.
@@ -84,10 +80,8 @@ class GridCell:
         5. Store the result in self.superposition_tile.
 
         Args:
-            tile_weights (dict[Tile, float]): A dict mapping each tile
-                to its frequency weight.
-            color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples
-                to characters.
+            tile_weights (dict[Tile, float]): A dict mapping each tile to its frequency weight.
+            color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples to characters.
         """
         if not show_superposition:
             return
