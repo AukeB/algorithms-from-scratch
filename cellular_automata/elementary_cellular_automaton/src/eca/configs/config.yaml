@@ -1,7 +1,7 @@
 game:
   initialization_mode: "random" # Options: ["single_alive_cell", "single_dead_cell", "random"]
   boundary_mode: "periodic" # Options: ["zero", "periodic", "reflective"]
-  rule_set: 184 # Ranges 0-255.
+  rule_set: 30 # Ranges 0-255.
   fps: 60
 
 window:
