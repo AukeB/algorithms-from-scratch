@@ -28,13 +28,13 @@ class Renderer:
 
         pg.init()
 
+        # Get screen size, but don't open the PyGame display yet. Cell size is
+        # a function of grid dimensions and window-grid margin, and is rarely
+        # a whole number of pixels — pygame's Rect truncates float dimensions,
+        # which leaves sub-pixel gaps between cells, visible as thin horizontal
+        # and vertical lines. The block below snaps cell size to an integer
+        # pixel and rescales window size accordingly before the display opens.
         self.screen_size = Size(*get_window_size_from_screen_resolution())
-        self.screen = pg.display.set_mode(
-            (self.screen_size.width, self.screen_size.height)
-        )
-        self.clock = pg.time.Clock()
-
-        pg.display.set_caption(window_caption)
 
         # Grid is always square: sized from the smaller of the two
         # margin-adjusted screen dimensions, and hugs the top-left corner.
@@ -43,6 +43,45 @@ class Renderer:
             self.screen_size.height - 2 * self.margin_size,
         )
         self.cell_size = self.grid_size / self.grid_dim
+
+        self._snap_to_pixel_grid()
+
+        self.screen = pg.display.set_mode(
+            (self.screen_size.width, self.screen_size.height)
+        )
+        self.clock = pg.time.Clock()
+
+        pg.display.set_caption(window_caption)
+
+    def _snap_to_pixel_grid(self, verbose: bool = True) -> None:
+        """Snaps cell size to the nearest integer pixel.
+
+        PyGame's Rect silently truncates float dimensions to integers on
+        construction, which causes sub-pixel gaps to accumulate across rows and
+        columns during rendering. Window size and margin are rescaled by the
+        same ratio so the grid still fills the available space exactly, with no
+        leftover gap on any edge. The resulting window size adjustment is
+        printed for visibility.
+        """
+        original_screen_size = self.screen_size
+
+        snap_ratio = round(self.cell_size) / self.cell_size
+        self.cell_size = round(self.cell_size)
+        self.margin_size = round(self.margin_size * snap_ratio)
+        self.screen_size = Size(
+            round(self.screen_size.width * snap_ratio),
+            round(self.screen_size.height * snap_ratio),
+        )
+        self.grid_size = self.cell_size * self.grid_dim
+
+        if verbose:
+            adjustment_pct = (snap_ratio - 1) * 100
+            print(
+                f"[cell-size snapping] window size adjusted from "
+                f"[{original_screen_size.width}, {original_screen_size.height}] to "
+                f"[{self.screen_size.width}, {self.screen_size.height}] "
+                f"({adjustment_pct:+.2f}%) to keep cells pixel-aligned"
+            )
 
     def tick(self, fps: int) -> float:
         """Advances the frame clock and reports the elapsed time.
