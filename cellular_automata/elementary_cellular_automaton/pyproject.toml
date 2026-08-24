@@ -1,0 +1,27 @@
+[project]
+name = "elementary-cellular-automaton"
+version = "0.1.0"
+description = "Python/PyGame implementation of the Elementary Cellular Automaton algorithm."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.12.3",
+    "pygame>=2.6.1",
+    "pyyaml>=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "docstring-tailor>=0.4.0",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.11.6",
+    "ty>=0.0.29",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.docstring_tailor]
+line-length = 80
+style = "google"
