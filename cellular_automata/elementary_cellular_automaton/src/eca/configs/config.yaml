@@ -1,7 +1,7 @@
 game:
-  initialization_mode: "single_alive_cell" # Options: ["single_alive_cell", "single_dead_cell", "random"]
+  initialization_mode: "random" # Options: ["single_alive_cell", "single_dead_cell", "random"]
   boundary_mode: "periodic" # Options: ["zero", "periodic", "reflective"]
-  rule_set: 89 # Ranges 0-255.
+  rule_set: 184 # Ranges 0-255.
   fps: 60
 
 window:
@@ -10,7 +10,7 @@ window:
   margin_size: 200 # Units: pixels.
 
 grid:
-  dim: 101 # Number of cells in width as well as height direction. Must be an odd number.
+  dim: 201 # Number of cells in width as well as height direction. Must be an odd number.
   color_map:
     0: [35, 35, 35] # `0` represent dead cells.
     1: [190, 55, 55] # `1` represent alive cells.
