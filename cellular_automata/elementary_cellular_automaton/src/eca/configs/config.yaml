@@ -1,16 +1,16 @@
 game:
-  initialization_mode: "random" # Options: ["single_alive_cell", "single_dead_cell", "random"]
+  initialization_mode: "single_alive_cell" # Options: ["single_alive_cell", "single_dead_cell", "random"]
   boundary_mode: "periodic" # Options: ["zero", "periodic", "reflective"]
-  rule_set: 30 # Ranges 0-255.
-  fps: 60
+  rule_set: 150 # Ranges 0-255.
+  fps: 10
 
 window:
   caption: "Elementary Cellular Automaton"
   background_color: [245, 245, 240] # RGB-values.
-  margin_size: 200 # Units: pixels.
+  margin_size: 20 # Units: pixels.
 
 grid:
-  dim: 201 # Number of cells in width as well as height direction. Must be an odd number.
+  dim: 401 # Number of cells in width as well as height direction. Must be an odd number.
   color_map:
     0: [35, 35, 35] # `0` represent dead cells.
     1: [190, 55, 55] # `1` represent alive cells.
