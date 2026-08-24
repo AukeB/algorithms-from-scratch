@@ -25,8 +25,8 @@ class Game:
         self.grid = Grid(config=config)
         self.renderer = Renderer(config=config)
 
-        # Random initialization for demonstration purposes.
-        self.grid.randomize()
+        # Initialize grid.
+        self.grid.initialize()
 
     def _handle_events(self) -> None:
         """Processes pending pygame events, including quit and key presses."""
@@ -43,6 +43,7 @@ class Game:
         Args:
             dt (float): Time in seconds elapsed since the last frame.
         """
+        self.grid.propagate()
 
     def _loop(self) -> None:
         """Runs the main loop: handle input, update state, render frame."""

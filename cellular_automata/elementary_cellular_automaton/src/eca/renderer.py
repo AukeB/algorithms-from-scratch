@@ -20,6 +20,7 @@ class Renderer:
         self.window_background_color = config.window.background_color
         self.margin_size = config.window.margin_size
         self.grid_color_map = config.grid.color_map
+        self.show_gridlines = config.grid.show_gridlines
         self.grid_line_color = config.grid.grid_line_color
         self.grid_line_width = config.grid.grid_line_width
         self.grid_dim = config.grid.dim
@@ -86,7 +87,7 @@ class Renderer:
         """
         for row in range(grid.dimensions.rows):
             for col in range(grid.dimensions.cols):
-                value = grid.cells[row][col]
+                value = grid.grid[row][col]
                 color = self.grid_color_map[value]
 
                 rect = pg.Rect(
@@ -110,7 +111,10 @@ class Renderer:
         """
         self.screen.fill(self.window_background_color)
         self.render_grid(grid=grid)
-        self._draw_grid_lines()
+
+        if self.show_gridlines:
+            self._draw_grid_lines()
+
         pg.display.flip()
 
     def quit(self) -> None:
