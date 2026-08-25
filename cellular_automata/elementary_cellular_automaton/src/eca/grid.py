@@ -40,19 +40,17 @@ class Grid:
         self.grid[position.y][position.x] = value
 
     def initialize(self) -> None:
-        """Initialize the cells in the grid based on the grid mode config."""
+        """Initialize the cells in the grid based on initialization_mode config."""
         if self.initialization_mode == "single_alive_cell":
-            self.set_cell(position=Position(x=self.dimensions.cols // 2, y=0), value=1)
+            row = [0] * self.dimensions.cols
+            row[self.dimensions.cols // 2] = 1
         elif self.initialization_mode == "single_dead_cell":
-            for x in range(self.dimensions.cols):
-                self.set_cell(position=Position(x=x, y=0), value=1)
-            self.set_cell(position=Position(x=self.dimensions.cols // 2, y=0), value=0)
+            row = [1] * self.dimensions.cols
+            row[self.dimensions.cols // 2] = 0
         elif self.initialization_mode == "random":
-            for x in range(self.dimensions.cols):
-                self.set_cell(
-                    position=Position(x=x, y=0),
-                    value=rd.randint(0, 1),
-                )
+            row = [rd.randint(0, 1) for _ in range(self.dimensions.cols)]
+
+        self.grid[0] = row
 
     @staticmethod
     def _get_padded_row(row: list[int], boundary_mode: str) -> list[int]:
@@ -87,7 +85,7 @@ class Grid:
         (left, center, right) and the configured elementary cellular automaton
         rule. The resulting row is stored at the next iteration.
         """
-        next_iteration = []
+        next_row = []
 
         padded_row = self._get_padded_row(
             row=self.grid[self.iteration], boundary_mode=self.boundary_mode
@@ -96,8 +94,8 @@ class Grid:
         for left, center, right in zip(padded_row, padded_row[1:], padded_row[2:]):
             neighborhood = (left << 2) | (center << 1) | right
             next_value = (self.rule_set >> neighborhood) & 1
-            next_iteration.append(next_value)
+            next_row.append(next_value)
 
         self.iteration += 1
 
-        self.grid[self.iteration] = next_iteration
+        self.grid[self.iteration] = next_row

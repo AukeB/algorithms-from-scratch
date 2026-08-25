@@ -1,5 +1,7 @@
 """Module for Pydantic configuration models."""
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -15,12 +17,12 @@ class ConfigModel(ConfiguredBaseModel):
     class ConfigGame(ConfiguredBaseModel):
         """Config for general game loop parameters."""
 
-        initialization_mode: (
-            str  # Determines how the first row is generated/initialized.
-        )
-        boundary_mode: (
-            str  # Determines how propagation is handled at the edges of the grid.
-        )
+        initialization_mode: Literal[
+            "single_alive_cell", "single_dead_cell", "random"
+        ]  # Determines how the first row is generated/initialized.
+        boundary_mode: Literal[
+            "zero", "periodic", "reflective"
+        ]  # Determines how propagation is handled at the edges of the grid.
         rule_set: int = Field(ge=0, le=255)
         fps: int
 
