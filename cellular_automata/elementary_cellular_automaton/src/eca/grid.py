@@ -5,7 +5,7 @@ visualizations.
 import random as rd
 
 from src.eca.config_model import ConfigModel
-from src.eca.constants import Dimensions, Position
+from src.eca.constants import Dimensions
 
 
 class Grid:
@@ -28,16 +28,6 @@ class Grid:
         ]
 
         self.iteration: int = 0
-
-    def set_cell(self, position: Position, value: int) -> None:
-        """Sets the state of the cell at the given position.
-
-        Args:
-            position (Position): x/y coordinate to write, where x maps to the
-                column and y maps to the row.
-            value (int): The new state to store at that position.
-        """
-        self.grid[position.y][position.x] = value
 
     def initialize(self) -> None:
         """Initialize the cells in the grid based on initialization_mode config."""
