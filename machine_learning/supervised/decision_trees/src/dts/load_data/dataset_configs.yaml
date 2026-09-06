@@ -1,0 +1,28 @@
+iris:
+  url: https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data
+  has_header: false
+  features:
+    - sepal_length
+    - sepal_width
+    - petal_length
+    - petal_width
+  target: species
+
+wine:
+  url: https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data
+  has_header: false
+  features:
+    - class
+    - alcohol
+    - malic_acid
+    - ash
+    - alkalinity
+    - magnesium
+    - phenols
+    - nonflavanoid_phenols
+    - proanthocyanins
+    - color_intensity
+    - hue
+    - od280_od315
+    - proline
+  target: proline  # or whatever the target is for wine
