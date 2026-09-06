@@ -20,7 +20,6 @@ class GiniImpurityEvaluator:
         feature_column_name (str): Name of the numeric feature column.
         target_column_name (str): Name of the target column (class labels).
         threshold_values (list[float]): Candidate split thresholds to evaluate.
-        n_total (int): Total number of samples (constant across all splits).
         results (dict): Stores Gini metrics for each threshold.
 
     Example:
@@ -48,7 +47,6 @@ class GiniImpurityEvaluator:
         self.feature_column_name = feature_column_name
         self.target_column_name = target_column_name
         self.threshold_values = threshold_values
-        self.n_total = len(df)
 
         # Initialize results dict with structure for each threshold
         self.results: dict = {
