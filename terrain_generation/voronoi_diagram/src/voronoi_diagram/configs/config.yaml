@@ -1,0 +1,17 @@
+game:
+  fps: 60
+
+window:
+  caption: "voronoi diagrams"
+  background_color: [100, 100, 100]
+  margin_size: 200 # Units: pixels.
+
+grid:
+  dim: 200 # Number of cells in width as well as height direction.
+  show_gridlines: False
+  grid_line_color: [150, 150, 150]
+  grid_line_width: 2 # Units: pixels.
+
+voronoi:
+  num_seeds: 20
+  seed_point_radius: 10

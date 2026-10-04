@@ -1,4 +1,5 @@
 """Module for utility functions relating to loading datasets."""
+from ty_extensions._internal import Unknown
 
 from pathlib import Path
 

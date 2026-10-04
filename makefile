@@ -5,7 +5,7 @@ ruff:
 	@echo "🔧 Successfully executed ruff."
 
 format-docstrings:
-	uv run docstring_tailor format
+	uv run docstring_tailor format 
 	@echo "🔧 Successfully executed docstring-tailor."
 
 # Static type-check code with ty

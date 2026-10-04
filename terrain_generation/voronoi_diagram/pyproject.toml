@@ -1,0 +1,35 @@
+[project]
+name = "voronoi-diagram"
+version = "0.1.0"
+description = "Project for generating voronoi diagrams."
+readme = "README.md"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "pg-plonker",
+    "pydantic>=2.13.2",
+    "pygame>=2.6.1",
+    "pyyaml>=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "docstring-tailor>=0.4.1",
+    "ruff>=0.15.11",
+    "ty>=0.0.31",
+]
+
+[tool.ruff.lint]
+select = [
+    "I",    # isort-style import sorting
+    "ANN",  # annotation rules
+]
+
+[tool.docstring_tailor]
+line-length = 80
+style = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.uv.sources]
+pg-plonker = { path = "../../../pg-plonker", editable = true }
