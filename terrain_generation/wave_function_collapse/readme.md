@@ -1,5 +1,7 @@
 # Wave Function Collapse
 
+Constraint-based algorithm that generates a 2D grid of tiles locally consistent with a source bitmap, respecting local adjacency rules, often used in procedural content generation.
+
 ## Algorithm
 
 The Wave Function Collapse algorithm generates a 2D grid of tiles that is locally consistent with a source bitmap. Every region of the output resembles a region of the input. The algorithm works in three phases: **extraction**, **initialisation**, and **collapse**.
