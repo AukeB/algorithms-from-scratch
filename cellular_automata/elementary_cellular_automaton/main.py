@@ -1,11 +1,15 @@
 """Module for running the main repository workflow."""
 
-from src.eca.config_manager import ConfigManager
-from src.eca.game import Game
+import logging
+
+from eca.config_manager import ConfigManager
+from eca.game import Game
 
 
 def main() -> None:
-    """Loads configuration and launches the pygame game window."""
+    """Configures logging, loads configuration, and launches the pygame window."""
+    logging.basicConfig(level=logging.INFO)
+
     config_manager = ConfigManager()
     config = config_manager.load_config_file()
 
