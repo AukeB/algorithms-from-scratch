@@ -1,0 +1,42 @@
+# Which variant to launch: "baseline", "trapezoid" or "image".
+variant: baseline
+
+window:
+  # Leave both as null for a windowed size based on the desktop resolution.
+  window_width: null
+  window_height: null
+
+simulation:
+  number_of_columns: 200
+  damping: 0.99
+  wave_brightness: 255
+  maximum_brightness: 255
+  cursor_splash_size: 1
+  framerate: 60
+  background_color: [0, 0, 0]
+
+# Only used by the baseline variant.
+baseline:
+  render_mode: surfarray # "surfarray" or "rectangle"
+  rgb_mode: scaled_colormap # "grayscale", "colormap" or "scaled_colormap"
+  propagate_mode: numba # "numba", "numpy" or "iterative"
+
+# Normalized trapezoid: 0 is the top/left of the window, 1 the bottom/right.
+# Used by the trapezoid and image variants.
+trapezoid:
+  y_top: 0.4
+  y_bottom: 1.0
+  x_top_left: 0.0
+  x_top_right: 1.0
+  x_bottom_left: 0.2
+  x_bottom_right: 1.0
+  perspective_exponent: 1 # Only used by the trapezoid variant.
+
+# Used by the image variant and by the mask scripts.
+image:
+  image_path: data/lake_1/image.jpg
+  mask_path: data/lake_1/mask.npy
+  polygon_path: data/lake_1/polygon_coordinates.json
+  reference_width: 4000 # Size the polygon and mask were drawn at.
+  reference_height: 2500
+  perspective_start: 0.5 # Only used by the image variant.

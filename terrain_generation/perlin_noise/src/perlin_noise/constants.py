@@ -1,23 +1,36 @@
-"""Project-specific constants."""
+"""Module for project constants and shared type definitions."""
 
-from collections import namedtuple
 from pathlib import Path
+from typing import Literal, NamedTuple
 
-# Paths.
-CONFIG_FILE_PATH = Path("src/perlin_noise/configs/config.yaml")
+CONFIG_FILE_PATH = Path(__file__).parent / "configs" / "config.yaml"
 
-"""`Dimensions` refers to the structural properties of a grid, matrix, or layout,
-specifying the number of columns and rows into which the grid is partitioned.
-
-`Size`denotes the physical or spatial extent of an object, characterized by its width
-and height. These measurements are typically expressed in pixels, but any unit of
-physical distance may be employed.
-"""
-Dimensions = namedtuple("Dimensions", "rows cols")
-Size = namedtuple("Size", "width height")
-
-# Type definitions.
-type RGBColor = tuple[int, int, int]
-
-# Determines the ratio between the PyGame window resolution and the screen resolution
+# Ratio between the PyGame window size and the desktop resolution.
 WINDOW_SIZE_SCREEN_FRACTION = 0.95
+
+type RGBColor = tuple[int, int, int]
+type SmoothingVersion = Literal["original", "revised"]
+
+
+class Dimensions(NamedTuple):
+    """Structural size of a grid, in rows and columns.
+
+    Attributes:
+        rows (int): Number of rows.
+        cols (int): Number of columns.
+    """
+
+    rows: int
+    cols: int
+
+
+class Size(NamedTuple):
+    """Physical extent of an object, in width and height.
+
+    Attributes:
+        width (int): Width in pixels.
+        height (int): Height in pixels.
+    """
+
+    width: int
+    height: int

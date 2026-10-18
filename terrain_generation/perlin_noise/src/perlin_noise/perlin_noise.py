@@ -1,26 +1,44 @@
-"""Module for the Perlin noise grid and gradient vector initialization."""
+"""Module for generating 2D Perlin noise and running its visualization."""
 
 import math
 
 import numpy as np
 import pygame as pg
 
-from src.perlin_noise.config_model import ConfigModel
-from src.perlin_noise.constants import Dimensions
-from src.perlin_noise.pn_visualizer import PNVisualizer, VisibilityState
-from src.perlin_noise.utils import smooth_perline_polyominal
+from perlin_noise.config_model import ConfigModel
+from perlin_noise.constants import Dimensions, SmoothingVersion
+from perlin_noise.pn_visualizer import PNVisualizer, VisibilityState
+from perlin_noise.utils import smooth_perlin_polynomial
 
 
 class PerlinNoise:
-    """Manages the Perlin noise gradient grid and exposes noise sampling."""
+    """Generate 2D Perlin noise on a grid of random gradients and show it with PyGame.
+
+    Attributes:
+        gradient_grid_dimensions (Dimensions): Rows and columns of gradient nodes. There is one
+            more node than cells along each side.
+        cell_resolution (int): Number of samples per cell along one dimension.
+        step_size (float): Distance between two samples, in grid coordinates.
+        noise_grid_dimensions (Dimensions): Rows and columns of the noise grid.
+        smoothing_version (SmoothingVersion): The fade curve used for interpolation.
+        gradient_grid (np.ndarray): Unit gradient vector at each node, shape (rows, cols, 2).
+        noise_grid (np.ndarray): Noise value at each sample.
+        rng (np.random.Generator): Random generator for the gradients.
+        pn_visualizer (PNVisualizer): Draws the grids and owns the GUI panel.
+        buttons (ButtonState): The visibility toggle buttons.
+
+    Example:
+        >>> config = ConfigManager().read_config()
+        >>> perlin_noise = PerlinNoise(config=config)
+        >>> perlin_noise.run()
+    """
 
     def __init__(self, config: ConfigModel) -> None:
-        """Unpack config and initialize the gradient grid.
+        """Set up the grids, the random generator, and the visualizer.
 
         Args:
-            config (ConfigModel): Configuration settings as a Pydantic model.
+            config (ConfigModel): The validated configuration model.
         """
-        # Initializations.
         self.gradient_grid_dimensions = Dimensions(
             rows=config.grid.dim + 1, cols=config.grid.dim + 1
         )
@@ -30,30 +48,26 @@ class PerlinNoise:
             rows=config.grid.dim * self.cell_resolution,
             cols=config.grid.dim * self.cell_resolution,
         )
-        self.smoothing_version: str = config.grid.smoothing_version
+        self.smoothing_version: SmoothingVersion = config.grid.smoothing_version
 
-        self.gradient_grid: np.ndarray
-        self.noise_grid: np.ndarray = np.zeros(self.noise_grid_dimensions)
+        self.gradient_grid = np.zeros(
+            (self.gradient_grid_dimensions.rows, self.gradient_grid_dimensions.cols, 2)
+        )
+        self.noise_grid = np.zeros(self.noise_grid_dimensions)
 
-        if config.grid.random_seed is not None:
-            self.rng = np.random.default_rng(config.grid.random_seed)
-        else:
-            self.rng = np.random.default_rng()
+        self.rng = np.random.default_rng(config.grid.random_seed)
 
         self.pn_visualizer = PNVisualizer(config=config)
-
         self.buttons = self.pn_visualizer.register_buttons()
 
     def _populate_gradient_grid(self) -> np.ndarray:
-        """Populate a grid of random unit gradient vectors at each node.
+        """Fill the nodes with random unit gradient vectors.
 
-        Each node sits at an integer coordinate corner. A random angle is sampled
-        uniformly from [0, 2π) and projected onto the unit circle via cos/sin, producing
-        a unit gradient vector at every node.
+        A random angle is drawn uniformly from [0, 2π) for each node, and converted to a unit vector
+        with cos and sin.
 
         Returns:
-            grid (np.ndarray): Array of shape (rows, cols, 2) containing a unit gradient
-                vector at each grid node.
+            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) with one unit vector per node.
         """
         angles = self.rng.uniform(0, 2 * np.pi, self.gradient_grid_dimensions)
         gradient_grid = np.stack([np.cos(angles), np.sin(angles)], axis=-1)
@@ -61,18 +75,19 @@ class PerlinNoise:
         return gradient_grid
 
     def _compute_noise_grid(self, interpolate: bool = True) -> np.ndarray:
-        """Compute the dot product between gradient vectors and offset vectors for each
-        sample point.
+        """Compute the Perlin noise value at every sample.
 
-        1. Iterate over every sample point in the noise grid.
-        2. Determine which grid cell the sample point falls in.
-        3. Identify the four corner nodes of that cell.
-        4. Compute the offset vector from each corner to the sample point.
-        5. Compute the dot product of each corner's gradient with its offset vector.
+        For each sample, the four corners of its cell are found, the dot product of each corner's
+        gradient with the offset to the sample is computed, and those values are combined. With
+        interpolation, the combination is a smoothed bilinear blend. Without it, the dot products are
+        averaged.
+
+        Args:
+            interpolate (bool): Whether to blend the corner values with a smoothed bilinear
+                interpolation. If False, the corner values are averaged instead.
 
         Returns:
-            noise_grid (np.ndarray): Array of shape (rows, cols) containing the dot
-                product value at each sample point.
+            noise_grid (np.ndarray): Array of shape (rows, cols) with the noise value at each sample.
         """
         noise_grid = np.zeros(self.noise_grid_dimensions)
 
@@ -82,41 +97,38 @@ class PerlinNoise:
                 y_coordinate = row * self.step_size
                 sample_point = np.array([x_coordinate, y_coordinate])
 
-                gradient_grid_x = math.floor(x_coordinate)
-                gradient_grid_y = math.floor(y_coordinate)
+                cell_x = math.floor(x_coordinate)
+                cell_y = math.floor(y_coordinate)
 
-                c1 = np.array([gradient_grid_x, gradient_grid_y])
-                c2 = np.array([gradient_grid_x + 1, gradient_grid_y])
-                c3 = np.array([gradient_grid_x, gradient_grid_y + 1])
-                c4 = np.array([gradient_grid_x + 1, gradient_grid_y + 1])
+                c1 = np.array([cell_x, cell_y])
+                c2 = np.array([cell_x + 1, cell_y])
+                c3 = np.array([cell_x, cell_y + 1])
+                c4 = np.array([cell_x + 1, cell_y + 1])
 
                 corners = [c1, c2, c3, c4]
-                offset_vectors = [sample_point - c for c in corners]
+                offset_vectors = [sample_point - corner for corner in corners]
 
                 if not interpolate:
                     dots = [
-                        np.dot(self.gradient_grid[c[1], c[0]], v)
-                        for c, v in zip(corners, offset_vectors)
+                        np.dot(self.gradient_grid[corner[1], corner[0]], offset)
+                        for corner, offset in zip(corners, offset_vectors)
                     ]
-
-                    noise_grid[row, col] = sum(dots) / 4
+                    total_dot = sum(dots)
+                    noise_grid[row, col] = total_dot / 4
                 else:
                     dot_bl, dot_br, dot_tl, dot_tr = [
-                        np.dot(self.gradient_grid[c[1], c[0]], offset)
-                        for c, offset in zip(corners, offset_vectors)
+                        np.dot(self.gradient_grid[corner[1], corner[0]], offset)
+                        for corner, offset in zip(corners, offset_vectors)
                     ]
 
                     dx, dy = offset_vectors[0]
-
-                    # Smoothing
-                    sx = smooth_perline_polyominal(
-                        dx, smoothing_version=self.smoothing_version
+                    sx = smooth_perlin_polynomial(
+                        t=dx, smoothing_version=self.smoothing_version
                     )
-                    sy = smooth_perline_polyominal(
-                        dy, smoothing_version=self.smoothing_version
+                    sy = smooth_perlin_polynomial(
+                        t=dy, smoothing_version=self.smoothing_version
                     )
 
-                    # Interpolation.
                     bottom = dot_bl + sx * (dot_br - dot_bl)
                     top = dot_tl + sx * (dot_tr - dot_tl)
 
@@ -125,34 +137,45 @@ class PerlinNoise:
         return noise_grid
 
     def generate(self) -> None:
-        """Execute the Perlin Noise generation algorithm."""
-        # 1. Populate the gradient grid with vectors at each node.
+        """Generate the gradient grid, then the noise grid from it."""
         self.gradient_grid = self._populate_gradient_grid()
         self.noise_grid = self._compute_noise_grid()
 
-    def run(self) -> None:
-        """Own the pygame event loop and orchestrate generation and rendering.
+    def _handle_events(self) -> bool:
+        """Pass the pending PyGame events to the GUI panel and check for quit requests.
 
-        Calls generate() once on startup, then re-calls it whenever the regenerate
-        button is toggled. Rendering and visibility are delegated to draw_frame() each
-        iteration.
+        Returns:
+            keep_running (bool): False once the window is closed or ESC is pressed, otherwise True.
+        """
+        keep_running = True
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                keep_running = False
+            elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                keep_running = False
+
+            self.pn_visualizer.gui_panel.handle_event(event=event)
+
+        return keep_running
+
+    def run(self) -> None:
+        """Run the event loop until the window is closed or ESC is pressed.
+
+        The noise is generated once on startup. Every frame, events are handled and the layers that
+        are toggled on are drawn.
         """
         self.generate()
 
-        while True:
-            for event in pg.event.get():
-                if event.type == pg.QUIT or (
-                    event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE
-                ):
-                    pg.quit()
-                    raise SystemExit
-
-                self.pn_visualizer.gui_panel.handle_event(event=event)
+        keep_running = True
+        while keep_running:
+            keep_running = self._handle_events()
 
             visibility = VisibilityState.from_buttons(self.buttons)
-
             self.pn_visualizer.draw_frame(
                 gradient_grid=self.gradient_grid,
                 noise_grid=self.noise_grid,
                 visibility=visibility,
             )
+
+        pg.quit()
