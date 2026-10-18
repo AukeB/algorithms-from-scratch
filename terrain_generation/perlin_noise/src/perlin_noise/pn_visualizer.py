@@ -1,4 +1,6 @@
-"""Module for drawing the Perlin noise grid, gradient vectors and noise cells with PyGame."""
+"""Module for drawing the Perlin noise grid, gradient vectors and noise cells with
+PyGame.
+"""
 
 from dataclasses import dataclass
 
@@ -61,7 +63,8 @@ class VisibilityState:
 
 
 class PNVisualizer:
-    """Draw the Perlin noise grid, its gradient vectors and its noise in a PyGame window.
+    """Draw the Perlin noise grid, its gradient vectors and its noise in a PyGame
+    window.
 
     Attributes:
         margin_size (int): Pixel margin around the grid on all sides.
@@ -132,13 +135,17 @@ class PNVisualizer:
             y = int(self.margin_size + row * self.cell_size)
             start = (self.margin_size, y)
             end = (grid_end, y)
-            pg.draw.line(self.screen, self.grid_line_color, start, end, self.grid_line_width)
+            pg.draw.line(
+                self.screen, self.grid_line_color, start, end, self.grid_line_width
+            )
 
         for col in range(self.gradient_grid_dimensions.cols + 1):
             x = int(self.margin_size + col * self.cell_size)
             start = (x, self.margin_size)
             end = (x, grid_end)
-            pg.draw.line(self.screen, self.grid_line_color, start, end, self.grid_line_width)
+            pg.draw.line(
+                self.screen, self.grid_line_color, start, end, self.grid_line_width
+            )
 
     def _draw_gradient_vectors(self, gradient_grid: np.ndarray) -> None:
         """Draw each grid node as a dot, with its gradient vector as an arrow.
@@ -155,19 +162,28 @@ class PNVisualizer:
                 node_y = self.margin_size + row * self.cell_size
                 node_center = (int(node_x), int(node_y))
 
-                pg.draw.circle(self.screen, self.circle_color, node_center, self.circle_width)
+                pg.draw.circle(
+                    self.screen, self.circle_color, node_center, self.circle_width
+                )
 
                 tip_x = node_x + gradient[0] * arrow_length_px
                 tip_y = node_y + gradient[1] * arrow_length_px
                 arrow_tip = (int(tip_x), int(tip_y))
 
-                pg.draw.line(self.screen, self.arrow_color, node_center, arrow_tip, self.arrow_width)
+                pg.draw.line(
+                    self.screen,
+                    self.arrow_color,
+                    node_center,
+                    arrow_tip,
+                    self.arrow_width,
+                )
 
     def _draw_noise_cells(self, noise_grid: np.ndarray) -> None:
         """Draw the noise grid as colored cells.
 
-        Negative values shade toward the negative color, positive values toward the positive color,
-        and values near zero stay close to white. The largest magnitude sets the full color.
+        Negative values shade toward the negative color, positive values toward the
+        positive color, and values near zero stay close to white. The largest magnitude
+        sets the full color.
 
         Args:
             noise_grid (np.ndarray): 2D array of scalar noise values.
@@ -225,11 +241,12 @@ class PNVisualizer:
         noise_grid: np.ndarray,
         visibility: VisibilityState,
     ) -> None:
-        """Render one frame: the noise, the gradients, the grid lines, and the GUI panel.
+        """Render one frame: the noise, the gradients, the grid lines, and the GUI
+        panel.
 
         Args:
-            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) containing unit gradient
-                vectors at each grid node.
+            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) containing unit
+                gradient vectors at each grid node.
             noise_grid (np.ndarray): 2D array of scalar noise values.
             visibility (VisibilityState): Flags controlling which layers are drawn.
         """

@@ -1,11 +1,15 @@
-"""Module for running the main repository workflow."""
+"""Entry point for the Voronoi diagram game."""
 
-from src.voronoi_diagram.config_manager import ConfigManager
-from src.voronoi_diagram.game import Game
+import logging
+
+from voronoi_diagram.config_manager import ConfigManager
+from voronoi_diagram.game import Game
 
 
 def main() -> None:
-    """Loads configuration and launches the pygame game window."""
+    """Load the configuration and run the game window until it is closed."""
+    logging.basicConfig(level=logging.INFO)
+
     config_manager = ConfigManager()
     config = config_manager.load_config_file()
 

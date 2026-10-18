@@ -15,13 +15,14 @@ class PerlinNoise:
     """Generate 2D Perlin noise on a grid of random gradients and show it with PyGame.
 
     Attributes:
-        gradient_grid_dimensions (Dimensions): Rows and columns of gradient nodes. There is one
-            more node than cells along each side.
+        gradient_grid_dimensions (Dimensions): Rows and columns of gradient nodes. There
+            is one more node than cells along each side.
         cell_resolution (int): Number of samples per cell along one dimension.
         step_size (float): Distance between two samples, in grid coordinates.
         noise_grid_dimensions (Dimensions): Rows and columns of the noise grid.
         smoothing_version (SmoothingVersion): The fade curve used for interpolation.
-        gradient_grid (np.ndarray): Unit gradient vector at each node, shape (rows, cols, 2).
+        gradient_grid (np.ndarray): Unit gradient vector at each node, shape (rows,
+            cols, 2).
         noise_grid (np.ndarray): Noise value at each sample.
         rng (np.random.Generator): Random generator for the gradients.
         pn_visualizer (PNVisualizer): Draws the grids and owns the GUI panel.
@@ -63,11 +64,12 @@ class PerlinNoise:
     def _populate_gradient_grid(self) -> np.ndarray:
         """Fill the nodes with random unit gradient vectors.
 
-        A random angle is drawn uniformly from [0, 2π) for each node, and converted to a unit vector
-        with cos and sin.
+        A random angle is drawn uniformly from [0, 2π) for each node, and converted to a
+        unit vector with cos and sin.
 
         Returns:
-            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) with one unit vector per node.
+            gradient_grid (np.ndarray): Array of shape (rows, cols, 2) with one unit
+                vector per node.
         """
         angles = self.rng.uniform(0, 2 * np.pi, self.gradient_grid_dimensions)
         gradient_grid = np.stack([np.cos(angles), np.sin(angles)], axis=-1)
@@ -77,17 +79,19 @@ class PerlinNoise:
     def _compute_noise_grid(self, interpolate: bool = True) -> np.ndarray:
         """Compute the Perlin noise value at every sample.
 
-        For each sample, the four corners of its cell are found, the dot product of each corner's
-        gradient with the offset to the sample is computed, and those values are combined. With
-        interpolation, the combination is a smoothed bilinear blend. Without it, the dot products are
-        averaged.
+        For each sample, the four corners of its cell are found, the dot product of each
+        corner's gradient with the offset to the sample is computed, and those values
+        are combined. With interpolation, the combination is a smoothed bilinear blend.
+        Without it, the dot products are averaged.
 
         Args:
-            interpolate (bool): Whether to blend the corner values with a smoothed bilinear
-                interpolation. If False, the corner values are averaged instead.
+            interpolate (bool): Whether to blend the corner values with a smoothed
+                bilinear interpolation. If False, the corner values are averaged
+                instead.
 
         Returns:
-            noise_grid (np.ndarray): Array of shape (rows, cols) with the noise value at each sample.
+            noise_grid (np.ndarray): Array of shape (rows, cols) with the noise value at
+                each sample.
         """
         noise_grid = np.zeros(self.noise_grid_dimensions)
 
@@ -145,7 +149,8 @@ class PerlinNoise:
         """Pass the pending PyGame events to the GUI panel and check for quit requests.
 
         Returns:
-            keep_running (bool): False once the window is closed or ESC is pressed, otherwise True.
+            keep_running (bool): False once the window is closed or ESC is pressed,
+                otherwise True.
         """
         keep_running = True
 
@@ -162,8 +167,8 @@ class PerlinNoise:
     def run(self) -> None:
         """Run the event loop until the window is closed or ESC is pressed.
 
-        The noise is generated once on startup. Every frame, events are handled and the layers that
-        are toggled on are drawn.
+        The noise is generated once on startup. Every frame, events are handled and the
+        layers that are toggled on are drawn.
         """
         self.generate()
 

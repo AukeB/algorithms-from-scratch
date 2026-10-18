@@ -1,70 +1,61 @@
-"""Module for game logic and orchestration of the main loop."""
-
-import sys
+"""Module for the game loop that ties the grid and the renderer together."""
 
 import pygame as pg
 
-from src.voronoi_diagram.config_model import ConfigModel
-from src.voronoi_diagram.grid import Grid
-from src.voronoi_diagram.renderer import Renderer
+from voronoi_diagram.config_model import ConfigModel
+from voronoi_diagram.grid import Grid
+from voronoi_diagram.renderer import Renderer
 
 
 class Game:
-    """Manages game state and orchestrates the main loop."""
+    """Run the main loop: handle input, keep the Voronoi diagram, and render each frame.
+
+    Attributes:
+        fps (int): Target frames per second.
+        running (bool): False once the window is closed or ESC is pressed.
+        num_seeds (int): Number of seed points.
+        grid (Grid): The grid, holding the seed points and the Voronoi cells.
+        renderer (Renderer): Owns the window and draws the grid.
+
+    Example:
+        >>> game = Game(config=ConfigManager().load_config_file())
+        >>> game.run()
+    """
 
     def __init__(self, config: ConfigModel) -> None:
-        """Initializes the game with configuration and state.
+        """Set up the grid and the renderer, and compute the Voronoi diagram once.
+
+        The seed points do not move, so the diagram only has to be computed once.
 
         Args:
-            config (ConfigModel): Pydantic-validated configuration model.
+            config (ConfigModel): The validated configuration model.
         """
         self.fps = config.game.fps
-
-        self.running: bool = True
+        self.running = True
         self.num_seeds = config.voronoi.num_seeds
 
         self.grid = Grid(config=config)
         self.renderer = Renderer(config=config)
 
         self.grid.generate_seed_points(self.num_seeds)
+        self.grid.generate_voronoi_diagram()
 
     def _handle_events(self) -> None:
-        """Processes pending pygame events, including quit and key presses."""
+        """Process the pending pygame events: closing the window and pressing ESC stop the game."""
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.running = False
-
-            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+            elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 self.running = False
 
-    def _update(self, dt: float) -> None:
-        """Advances game state for the current frame.
-
-        Args:
-            dt (float): Time in seconds elapsed since the last frame.
-        """
-        self.grid.generate_voronoi_diagram()
-
     def _loop(self) -> None:
-        """Runs the main loop: handle input, update state, render frame."""
+        """Run the main loop: cap the frame rate, handle input, and render, until the game stops."""
         while self.running:
-            dt = self.renderer.tick(self.fps)
-
+            self.renderer.tick(self.fps)
             self._handle_events()
-            self._update(dt)
-
             self.renderer.render(self.grid)
 
-    def _quit(self) -> None:
-        """Shuts down the renderer and exits the process cleanly."""
-        self.renderer.quit()
-        sys.exit()
-
     def run(self) -> None:
-        """Orchestrates setup, main loop, and clean shutdown.
-
-        1. Run the main loop until the game stops running.
-        2. Shut down pygame and exit the process cleanly.
-        """
+        """Run the game until it stops, then shut pygame down."""
         self._loop()
-        self._quit()
+        self.renderer.quit()
