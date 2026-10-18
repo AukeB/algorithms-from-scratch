@@ -232,20 +232,15 @@ name = "pg-plonker"
 version = "0.1.0"
 source = { editable = "../../../pg-plonker" }
 dependencies = [
-    { name = "pydantic" },
     { name = "pygame" },
-    { name = "pyyaml" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "pydantic", specifier = ">=2.12.3" },
-    { name = "pygame", specifier = ">=2.6.1" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-]
+requires-dist = [{ name = "pygame", specifier = ">=2.6.1" }]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "deptry", specifier = ">=0.25.1" },
     { name = "docstring-tailor", specifier = ">=0.4.1" },
     { name = "pyright", specifier = ">=1.1.414" },
     { name = "pytest", specifier = ">=8.4.2" },
