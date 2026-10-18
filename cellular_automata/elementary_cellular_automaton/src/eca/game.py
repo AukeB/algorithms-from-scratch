@@ -19,8 +19,9 @@ class Game:
         _renderer (Renderer): Draws the grid to the pygame window.
 
     Example:
-        config = ConfigManager().load_config_file() game = Game(config=config)
-        game.run()
+        >>> config = ConfigManager().load_config_file()
+        >>> game = Game(config=config)
+        >>> game.run()
     """
 
     def __init__(self, config: ConfigModel) -> None:

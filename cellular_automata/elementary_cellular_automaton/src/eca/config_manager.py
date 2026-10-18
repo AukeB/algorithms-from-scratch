@@ -19,8 +19,8 @@ class ConfigManager:
         config_path (Path): Path to the YAML configuration file to load.
 
     Example:
-        config_manager = ConfigManager() config =
-        config_manager.load_config_file()
+        >>> config_manager = ConfigManager()
+        >>> config = config_manager.load_config_file()
     """
 
     def __init__(self, config_path: Path = CONFIG_PATH) -> None:
