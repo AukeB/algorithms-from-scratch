@@ -63,7 +63,7 @@ def test_get_neighbors_returns_k_closest_indices_first(
     classifier = KNNClassifier(k=2)
     classifier.fit(X=X_train, y=y_train)
 
-    neighbors_idx = classifier._get_neighbors(np.array([1.2, 1.4]))
+    neighbors_idx = classifier._get_neighbors(np.array([1.2, 1.4]), X_train)
 
     assert list(neighbors_idx) == [0, 1]
 

@@ -6,4 +6,6 @@ class UnsupportedDistanceMetricError(ValueError):
 
 
 class NotFittedError(RuntimeError):
-    """Raised when predictions are requested before the classifier has been fitted."""
+    """Raised when predictions are requested before the classifier has been
+    fitted.
+    """

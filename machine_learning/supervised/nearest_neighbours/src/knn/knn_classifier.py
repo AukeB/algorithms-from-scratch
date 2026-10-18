@@ -10,11 +10,13 @@ _SUPPORTED_DISTANCE_METRICS: tuple[str, ...] = ("euclidean",)
 
 
 class KNNClassifier:
-    """Classifies points by a majority vote among their k nearest training points.
+    """Classifies points by a majority vote among their k nearest training
+    points.
 
     Attributes:
         k (int): Number of nearest neighbours that vote on each prediction.
-        distance_metric (str): Name of the metric used to measure distance between points.
+        distance_metric (str): Name of the metric used to measure distance
+            between points.
         _X_train (np.ndarray | None): Training features, one row per sample.
         _y_train (np.ndarray | None): Training labels, one entry per sample.
 
@@ -35,7 +37,8 @@ class KNNClassifier:
 
         Raises:
             ValueError: If k is smaller than 1.
-            UnsupportedDistanceMetricError: If the distance metric is not supported.
+            UnsupportedDistanceMetricError: If the distance metric is not
+                supported.
         """
         if k < 1:
             raise ValueError(f"k must be at least 1, got {k}.")
@@ -56,7 +59,8 @@ class KNNClassifier:
 
         Args:
             x1 (np.ndarray): First point.
-            x2 (np.ndarray): Second point, with the same number of features as x1.
+            x2 (np.ndarray): Second point, with the same number of features as
+                x1.
 
         Returns:
             distance (float): Distance between x1 and x2.
@@ -67,17 +71,18 @@ class KNNClassifier:
 
         return distance
 
-    def _get_neighbors(self, x: np.ndarray) -> np.ndarray:
+    def _get_neighbors(self, x: np.ndarray, X_train: np.ndarray) -> np.ndarray:
         """Finds the indices of the k training points closest to a point.
 
         Args:
             x (np.ndarray): Point to find the neighbours of.
+            X_train (np.ndarray): Training features, one row per sample.
 
         Returns:
-            neighbors_idx (np.ndarray): Indices of the k nearest training points,
-                closest first.
+            neighbors_idx (np.ndarray): Indices of the k nearest training
+                points, closest first.
         """
-        distances = [self._compute_distance(x, x_train) for x_train in self._X_train]
+        distances = [self._compute_distance(x, x_train) for x_train in X_train]
         sorted_idx = np.argsort(distances)
         neighbors_idx = sorted_idx[: self.k]
 
@@ -94,7 +99,8 @@ class KNNClassifier:
         self._y_train = y
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Predicts the label of each point by majority vote of its nearest neighbours.
+        """Predicts the label of each point by majority vote of its nearest
+        neighbours.
 
         Args:
             X (np.ndarray): Points to classify, one row per point.
@@ -108,11 +114,14 @@ class KNNClassifier:
         if self._X_train is None or self._y_train is None:
             raise NotFittedError("Call fit before predict.")
 
+        X_train = self._X_train
+        y_train = self._y_train
+
         labels = []
 
         for x in X:
-            neighbors_idx = self._get_neighbors(x)
-            neighbor_labels = self._y_train[neighbors_idx]
+            neighbors_idx = self._get_neighbors(x, X_train)
+            neighbor_labels = y_train[neighbors_idx]
             votes = Counter(neighbor_labels)
             most_common = votes.most_common(1)
             label = most_common[0][0]

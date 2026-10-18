@@ -11,9 +11,12 @@ dependencies = [
 [dependency-groups]
 dev = [
     "deptry>=0.25.1",
+    "docstring-tailor>=0.4.1",
+    "pyright>=1.1.414",
     "pytest>=8.4.2",
     "pytest-cov>=7.1.0",
     "ruff>=0.11.6",
+    "ty>=0.0.89",
 ]
 # Interactive marimo notebook (knn_classifier.py) and its drawdata widget.
 notebook = [
@@ -28,6 +31,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/knn"]
+
+[tool.deptry]
+known_first_party = ["knn"]
+
+# The marimo notebook imports these; they belong to the "notebook" group, not runtime.
+[tool.deptry.per_rule_ignores]
+DEP004 = ["marimo", "drawdata"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
