@@ -18,7 +18,8 @@ class Renderer:
 
     Attributes:
         window_background_color (RGBColor): Color behind the grid.
-        margin_size (int): Pixel margin between the window edge and the grid, after snapping.
+        margin_size (int): Pixel margin between the window edge and the grid, after
+            snapping.
         show_gridlines (bool): Whether to draw lines between cells.
         grid_line_color (RGBColor): Color of the grid lines.
         grid_line_width (int): Width of the grid lines in pixels.
@@ -85,9 +86,9 @@ class Renderer:
     def _snap_to_pixel_grid(self) -> None:
         """Round the cell size to whole pixels, and rescale the window to match.
 
-        PyGame's Rect truncates float dimensions, which leaves sub-pixel gaps between cells. The cell
-        size is rounded, and the window size and margin are scaled by the same ratio, so the grid
-        still fills the available space exactly.
+        PyGame's Rect truncates float dimensions, which leaves sub-pixel gaps between
+        cells. The cell size is rounded, and the window size and margin are scaled by
+        the same ratio, so the grid still fills the available space exactly.
         """
         original_width = self.screen_size.width
         original_height = self.screen_size.height
@@ -126,13 +127,17 @@ class Renderer:
             y = int(self.margin_size + row * self.cell_size)
             start = (self.margin_size, y)
             end = (grid_end, y)
-            pg.draw.line(self.screen, self.grid_line_color, start, end, self.grid_line_width)
+            pg.draw.line(
+                self.screen, self.grid_line_color, start, end, self.grid_line_width
+            )
 
         for col in range(self.grid_dim + 1):
             x = int(self.margin_size + col * self.cell_size)
             start = (x, self.margin_size)
             end = (x, grid_end)
-            pg.draw.line(self.screen, self.grid_line_color, start, end, self.grid_line_width)
+            pg.draw.line(
+                self.screen, self.grid_line_color, start, end, self.grid_line_width
+            )
 
     def _draw_cells(self, grid: Grid) -> None:
         """Fill every cell with the color of the seed point that owns it.
@@ -166,7 +171,8 @@ class Renderer:
             pg.draw.circle(self.screen, color, center, self.seed_point_radius)
 
     def render(self, grid: Grid) -> None:
-        """Draw one frame: the background, the cells, the seed points and optionally the grid lines.
+        """Draw one frame: the background, the cells, the seed points and optionally the
+        grid lines.
 
         Args:
             grid (Grid): The grid to draw.

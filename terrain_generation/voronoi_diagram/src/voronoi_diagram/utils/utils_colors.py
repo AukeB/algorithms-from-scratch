@@ -30,14 +30,15 @@ def _hsv_to_rgb_color(hue: float, saturation: float, value: float) -> RGBColor:
 def generate_voronoi_colors(
     num_seeds: int,
 ) -> tuple[list[RGBColor], list[RGBColor]]:
-    """Generate the seed point and cell colors, with hues spread evenly around the wheel.
+    """Generate the seed point and cell colors, with hues spread evenly around the
+    wheel.
 
     Args:
         num_seeds (int): Number of colors to generate for each palette.
 
     Returns:
-        colors (tuple[list[RGBColor], list[RGBColor]]): The seed point colors (darker) and the
-            voronoi cell colors (bright), one of each per seed.
+        colors (tuple[list[RGBColor], list[RGBColor]]): The seed point colors (darker)
+            and the voronoi cell colors (bright), one of each per seed.
     """
     seed_colors: list[RGBColor] = []
     cell_colors: list[RGBColor] = []

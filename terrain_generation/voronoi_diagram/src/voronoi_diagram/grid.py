@@ -7,7 +7,8 @@ from voronoi_diagram.constants import Dimensions, Position
 
 
 class Grid:
-    """Hold the grid cells, and assign each cell to the region of its nearest seed point.
+    """Hold the grid cells, and assign each cell to the region of its nearest seed
+    point.
 
     Attributes:
         dimensions (Dimensions): Number of rows and columns of the grid.
@@ -26,8 +27,8 @@ class Grid:
 
         Args:
             config (ConfigModel): The validated configuration model.
-            rng (random.Random | None): Random generator for the seed points. Defaults to a new,
-                unseeded generator.
+            rng (random.Random | None): Random generator for the seed points. Defaults
+                to a new, unseeded generator.
         """
         self.dimensions = Dimensions(rows=config.grid.dim, cols=config.grid.dim)
 

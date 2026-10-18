@@ -41,7 +41,9 @@ class Game:
         self.grid.generate_voronoi_diagram()
 
     def _handle_events(self) -> None:
-        """Process the pending pygame events: closing the window and pressing ESC stop the game."""
+        """Process the pending pygame events: closing the window and pressing ESC stop
+        the game.
+        """
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.running = False
@@ -49,7 +51,9 @@ class Game:
                 self.running = False
 
     def _loop(self) -> None:
-        """Run the main loop: cap the frame rate, handle input, and render, until the game stops."""
+        """Run the main loop: cap the frame rate, handle input, and render, until the
+        game stops.
+        """
         while self.running:
             self.renderer.tick(self.fps)
             self._handle_events()
