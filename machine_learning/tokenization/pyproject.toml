@@ -1,0 +1,43 @@
+[project]
+name = "gpt-tokenizer"
+version = "0.1.0"
+description = "Byte pair encoding tokenizer similar to the GPT model."
+readme = "readme.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "deptry>=0.25.1",
+    "docstring-tailor>=0.4.1",
+    "pyright>=1.1.414",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.11.6",
+    "ty>=0.0.29",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gpt_tokenizer"]
+
+[tool.deptry]
+known_first_party = ["gpt_tokenizer"]
+
+[tool.ruff]
+# The exploratory notebook is kept as written and is not part of the package.
+extend-exclude = ["*.ipynb"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests put two blank lines between imports and the section comments.
+"tests/**" = ["I001"]
+
+[tool.docstring_tailor]
+line-length = 80
+style = "google"
