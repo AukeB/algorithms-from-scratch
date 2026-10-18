@@ -3,7 +3,7 @@ name = "wave-function-collapse"
 version = "0.1.0"
 description = "Python implementation of the Wave function collapse (WFC) algorithm."
 readme = "readme.md"
-requires-python = ">=3.12, <3.13"
+requires-python = ">=3.12"
 dependencies = [
     "openpyxl>=3.1.5",
     "pillow>=12.2.0",
