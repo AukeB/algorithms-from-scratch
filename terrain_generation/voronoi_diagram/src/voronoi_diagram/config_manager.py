@@ -1,22 +1,27 @@
-"""Module for loading the configuration files."""
+"""Module for loading and validating the Voronoi diagram configuration file."""
 
 from pathlib import Path
 
 import yaml
 
-from src.voronoi_diagram.config_model import ConfigModel
-from src.voronoi_diagram.constants import CONFIG_PATH
+from voronoi_diagram.config_model import ConfigModel
+from voronoi_diagram.constants import CONFIG_PATH
 
 
 class ConfigManager:
-    """Loads and validates configuration files into a ConfigModel.
+    """Load and validate the config file into a ConfigModel.
 
-    Handles reading a YAML config file from disk and parsing it into a validated
-    Pydantic model.
+    Attributes:
+        config_path (Path): Path to the YAML configuration file.
+
+    Example:
+        >>> config = ConfigManager().load_config_file()
+        >>> config.voronoi.num_seeds
+        20
     """
 
     def __init__(self, config_path: Path = CONFIG_PATH) -> None:
-        """Initializes the ConfigManager with a path to the config file.
+        """Initialize the ConfigManager with a path to the config file.
 
         Args:
             config_path (Path): Path to the YAML configuration file to load.
@@ -24,16 +29,14 @@ class ConfigManager:
         self.config_path = config_path
 
     def load_config_file(self) -> ConfigModel:
-        """Reads the YAML config file and parses it into a ConfigModel.
-
-        1. Opens the config file at self.config_path.
-        2. Parses the file contents as YAML.
-        3. Validates and structures the parsed data into a ConfigModel.
+        """Read the YAML config file and validate it into a ConfigModel.
 
         Returns:
-            config (ConfigModel): The validated configuration object.
+            config (ConfigModel): The validated configuration.
         """
-        with open(self.config_path) as file:
-            config = yaml.safe_load(file)
+        with open(self.config_path, encoding="utf-8") as file:
+            raw_config = yaml.safe_load(file)
 
-        return ConfigModel(**config)
+        config = ConfigModel.model_validate(raw_config)
+
+        return config

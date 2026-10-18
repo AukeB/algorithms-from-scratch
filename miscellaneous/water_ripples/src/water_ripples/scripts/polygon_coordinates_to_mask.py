@@ -2,7 +2,7 @@
 
 Run it from the project root with:
 
-    uv run python -m water_ripples.scripts.polygon_coordinates_to_mask
+uv run python -m water_ripples.scripts.polygon_coordinates_to_mask
 """
 
 import logging

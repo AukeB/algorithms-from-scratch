@@ -1,4 +1,6 @@
-"""Module for the trapezoid variant: the grid is projected onto a trapezoid for a sense of depth."""
+"""Module for the trapezoid variant: the grid is projected onto a trapezoid for a sense
+of depth.
+"""
 
 from dataclasses import dataclass
 
@@ -35,8 +37,8 @@ class TrapezoidRipples(RippleSimulation):
     """Ripple simulation projected onto a trapezoid, so rows near the top look smaller.
 
     Attributes:
-        perspective_exponent (float): Strength of the perspective. 0 is flat, higher values make the
-            bottom rows dominate.
+        perspective_exponent (float): Strength of the perspective. 0 is flat, higher
+            values make the bottom rows dominate.
         trapezoid (TrapezoidPixels): The trapezoid in window pixel coordinates.
         row_geometry (list[RowGeometry]): Pixel bounds of every grid row, computed once.
 
@@ -65,10 +67,11 @@ class TrapezoidRipples(RippleSimulation):
     def _compute_row_geometry(self) -> list[RowGeometry]:
         """Precompute the pixel bounds of every row, which gives the perspective effect.
 
-        Row i gets weight (i + 1) ** perspective_exponent, so rows near the bottom are taller than
-        rows near the top. The cumulative weights become normalized row boundaries, which place each
-        row's top and bottom edges. The left and right edges are interpolated between the top and
-        bottom corners of the trapezoid at the top edge of the row.
+        Row i gets weight (i + 1) ** perspective_exponent, so rows near the bottom are
+        taller than rows near the top. The cumulative weights become normalized row
+        boundaries, which place each row's top and bottom edges. The left and right
+        edges are interpolated between the top and bottom corners of the trapezoid at
+        the top edge of the row.
 
         Returns:
             geometry (list[RowGeometry]): One entry per grid row, from top to bottom.
@@ -99,7 +102,9 @@ class TrapezoidRipples(RippleSimulation):
             x_left = int(self.trapezoid.x_top_left + left_span * t_top)
             x_right = int(self.trapezoid.x_top_right + right_span * t_top)
 
-            row = RowGeometry(y_top=y_top, y_bottom=y_bottom, x_left=x_left, x_right=x_right)
+            row = RowGeometry(
+                y_top=y_top, y_bottom=y_bottom, x_left=x_left, x_right=x_right
+            )
             geometry.append(row)
 
         geometry[-1].y_bottom = int(self.trapezoid.y_bottom)
@@ -111,7 +116,8 @@ class TrapezoidRipples(RippleSimulation):
 
         Args:
             mx (int): The x pixel position of the mouse.
-            grid_y (int): The grid row, which determines the bounds to interpolate within.
+            grid_y (int): The grid row, which determines the bounds to interpolate
+                within.
 
         Returns:
             grid_x (int): The grid column, clamped to the valid range.
@@ -180,8 +186,8 @@ class TrapezoidRipples(RippleSimulation):
     def _render_rows(self, rgba_array: np.ndarray) -> None:
         """Draw each grid row as a stretched strip at its trapezoid position.
 
-        Each row is drawn as a one-pixel-tall surface, scaled to the row's pixel bounds. Rows with no
-        width or height are skipped.
+        Each row is drawn as a one-pixel-tall surface, scaled to the row's pixel bounds.
+        Rows with no width or height are skipped.
 
         Args:
             rgba_array (np.ndarray): A uint8 array of shape (rows, cols, 4).

@@ -17,8 +17,8 @@ class ImageRipples(RippleSimulation):
     """Ripple overlay on a background photograph, drawn only where the lake mask is set.
 
     Attributes:
-        perspective_start (float): Strength of the perspective. 0 is flat, higher values make the
-            bottom rows dominate.
+        perspective_start (float): Strength of the perspective. 0 is flat, higher values
+            make the bottom rows dominate.
         trapezoid (TrapezoidPixels): The trapezoid in window pixel coordinates.
         scaled_cell_height (float): Height of one row of the trapezoid in pixels.
         background_image (pg.Surface): The photograph, scaled to the window.
@@ -61,9 +61,9 @@ class ImageRipples(RippleSimulation):
     def _compute_vertical_scaling(self, y: float) -> float:
         """Map a grid row to its projected vertical position.
 
-        The projection is quadratic in y, so rows near the bottom get more height than rows near the
-        top. perspective_start controls how strong that effect is: 0 gives equal rows, and larger
-        values make the bottom rows dominate.
+        The projection is quadratic in y, so rows near the bottom get more height than
+        rows near the top. perspective_start controls how strong that effect is: 0 gives
+        equal rows, and larger values make the bottom rows dominate.
 
         Args:
             y (float): Grid row, starting at 0 for the top row.
@@ -79,10 +79,11 @@ class ImageRipples(RippleSimulation):
         return y_adjusted
 
     def _inverse_vertical_scaling(self, y_adjusted: float) -> float:
-        """Invert _compute_vertical_scaling: find the grid row that projects to a position.
+        """Invert _compute_vertical_scaling: find the grid row that projects to a
+        position.
 
-        The projection is quadratic, so the inverse comes from the positive root of the quadratic
-        formula.
+        The projection is quadratic, so the inverse comes from the positive root of the
+        quadratic formula.
 
         Args:
             y_adjusted (float): The projected position to invert.
@@ -103,14 +104,21 @@ class ImageRipples(RippleSimulation):
         """Find the left and right pixel edges of a projected row.
 
         Args:
-            y_adjusted (float): The projected row position, from _compute_vertical_scaling.
+            y_adjusted (float): The projected row position, from
+                _compute_vertical_scaling.
 
         Returns:
             x_bounds (tuple[float, float]): The left and right pixel edges of the row.
         """
         height_per_row = self.window_height / self.number_of_rows
-        left_span = self._normalized_trapezoid.x_bottom_left - self._normalized_trapezoid.x_top_left
-        right_span = self._normalized_trapezoid.x_bottom_right - self._normalized_trapezoid.x_top_right
+        left_span = (
+            self._normalized_trapezoid.x_bottom_left
+            - self._normalized_trapezoid.x_top_left
+        )
+        right_span = (
+            self._normalized_trapezoid.x_bottom_right
+            - self._normalized_trapezoid.x_top_right
+        )
 
         x_left = self.trapezoid.x_top_left + left_span * y_adjusted * height_per_row
         x_right = self.trapezoid.x_top_right + right_span * y_adjusted * height_per_row
@@ -125,8 +133,8 @@ class ImageRipples(RippleSimulation):
             my (int): The y pixel position of the mouse.
 
         Returns:
-            grid_y (int | None): The grid row, clamped to the valid range, or None if the mouse is
-                above or below the trapezoid.
+            grid_y (int | None): The grid row, clamped to the valid range, or None if
+                the mouse is above or below the trapezoid.
         """
         if my < self.trapezoid.y_top or my > self.trapezoid.y_bottom:
             return None
@@ -143,7 +151,8 @@ class ImageRipples(RippleSimulation):
 
         Args:
             mx (int): The x pixel position of the mouse.
-            grid_y (int): The grid row, which determines the bounds to interpolate within.
+            grid_y (int): The grid row, which determines the bounds to interpolate
+                within.
 
         Returns:
             grid_x (int): The grid column, clamped to the valid range.
@@ -164,8 +173,8 @@ class ImageRipples(RippleSimulation):
             my (int): The y pixel position of the mouse.
 
         Returns:
-            grid_position (tuple[int, int] | None): The (column, row) under the mouse, or None if the
-                mouse is outside the trapezoid.
+            grid_position (tuple[int, int] | None): The (column, row) under the mouse,
+                or None if the mouse is outside the trapezoid.
         """
         grid_y = self._mouse_y_to_grid_y(my=my)
 
@@ -178,9 +187,11 @@ class ImageRipples(RippleSimulation):
         return grid_position
 
     def _map_state_to_rgba(self) -> np.ndarray:
-        """Map the current state to an RGBA array, with alpha proportional to the wave intensity.
+        """Map the current state to an RGBA array, with alpha proportional to the wave
+        intensity.
 
-        Flat water is fully transparent, so the photograph shows through. Active waves are opaque.
+        Flat water is fully transparent, so the photograph shows through. Active waves
+        are opaque.
 
         Returns:
             rgba_array (np.ndarray): A uint8 array of shape (rows, cols, 4).
@@ -201,11 +212,12 @@ class ImageRipples(RippleSimulation):
         return rgba_array
 
     def _render_state(self, rgba_array: np.ndarray) -> None:
-        """Draw each grid cell as a quadrilateral on a transparent overlay, where the mask is set.
+        """Draw each grid cell as a quadrilateral on a transparent overlay, where the
+        mask is set.
 
-        Each cell's corners come from the projected rows above and below it. A cell is skipped when
-        its center is outside the lake mask. The overlay is blitted over the background at the end,
-        so the alpha of each cell blends with the photograph.
+        Each cell's corners come from the projected rows above and below it. A cell is
+        skipped when its center is outside the lake mask. The overlay is blitted over
+        the background at the end, so the alpha of each cell blends with the photograph.
 
         Args:
             rgba_array (np.ndarray): A uint8 array of shape (rows, cols, 4).
@@ -221,7 +233,9 @@ class ImageRipples(RippleSimulation):
             )
 
             cell_width_top = (x_right_top - x_left_top) / self.number_of_columns
-            cell_width_bottom = (x_right_bottom - x_left_bottom) / self.number_of_columns
+            cell_width_bottom = (
+                x_right_bottom - x_left_bottom
+            ) / self.number_of_columns
             y_cell_top = self.trapezoid.y_top + y_adjusted_top * self.scaled_cell_height
             y_cell_bottom = (
                 self.trapezoid.y_top + y_adjusted_bottom * self.scaled_cell_height

@@ -1,9 +1,10 @@
 """Script for drawing a polygon on the reference image by clicking points.
 
-Left click adds a point, Z undoes the last point, Enter saves the polygon (at least three points) and
-quits, and ESC quits without saving. Run it from the project root with:
+Left click adds a point, Z undoes the last point, Enter saves the polygon (at least
+three points) and quits, and ESC quits without saving. Run it from the project root
+with:
 
-    uv run python -m water_ripples.scripts.get_polygon_coordinates
+uv run python -m water_ripples.scripts.get_polygon_coordinates
 """
 
 import logging
@@ -47,14 +48,18 @@ def handle_event(
         mouse_pos (tuple[int, int]): The mouse position, used when a point is added.
 
     Returns:
-        action (PickerAction): "save" to save and quit, "quit" to quit without saving, or
-            "continue" to keep going.
+        action (PickerAction): "save" to save and quit, "quit" to quit without saving,
+            or "continue" to keep going.
     """
     if event.type == pg.QUIT:
         action: PickerAction = "quit"
     elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
         action = "quit"
-    elif event.type == pg.KEYDOWN and event.key == pg.K_RETURN and len(points) >= _MINIMUM_POINTS:
+    elif (
+        event.type == pg.KEYDOWN
+        and event.key == pg.K_RETURN
+        and len(points) >= _MINIMUM_POINTS
+    ):
         action = "save"
     elif event.type == pg.KEYDOWN and event.key == pg.K_z and points:
         points.pop()
@@ -120,7 +125,8 @@ def run_picker(
         reference_height (int): Height of the window, which is also the reference size.
 
     Returns:
-        saved (bool): True if the polygon was saved, False if the user quit without saving.
+        saved (bool): True if the polygon was saved, False if the user quit without
+            saving.
     """
     pg.init()
     screen = pg.display.set_mode((reference_width, reference_height))

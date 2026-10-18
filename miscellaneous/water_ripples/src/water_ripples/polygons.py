@@ -1,7 +1,7 @@
 """Module for saving, loading and rasterizing polygons drawn on the reference image.
 
-Polygons are stored as JSON with normalized [0, 1] coordinates, so they do not depend on the
-resolution they were drawn at.
+Polygons are stored as JSON with normalized [0, 1] coordinates, so they do not depend on
+the resolution they were drawn at.
 """
 
 import json
@@ -116,7 +116,8 @@ def rasterize_polygon(
         height (int): Height of the mask in pixels.
 
     Returns:
-        mask (np.ndarray): A boolean array of shape (height, width), True inside the polygon.
+        mask (np.ndarray): A boolean array of shape (height, width), True inside the
+            polygon.
     """
     surface = pg.Surface((width, height))
     surface.fill((0, 0, 0))

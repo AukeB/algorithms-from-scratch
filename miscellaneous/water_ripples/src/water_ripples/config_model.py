@@ -36,7 +36,8 @@ class ConfigModel(ConfiguredBaseModel):
             damping (float): Factor between 0 and 1 that reduces wave amplitude.
             wave_brightness (int): Intensity of a splash.
             maximum_brightness (int): Maximum brightness the visualization shows.
-            cursor_splash_size (int): Half-width of the disturbed square under the cursor.
+            cursor_splash_size (int): Half-width of the disturbed square under the
+                cursor.
             framerate (int): Target frames per second.
             background_color (tuple[int, int, int]): Background color of the canvas.
         """

@@ -1,24 +1,47 @@
-# Module for storing project constants.
+"""Module for project constants and shared type definitions."""
 
-from collections import namedtuple
 from pathlib import Path
+from typing import NamedTuple
 
-# Project directory and file paths.
-CONFIG_PATH = Path("src/voronoi_diagram/configs/config.yaml")
+CONFIG_PATH = Path(__file__).parent / "configs" / "config.yaml"
 
-# PyGame setup.
-WINDOW_SIZE_SCREEN_FRACTION: float = 0.9
+# Ratio between the PyGame window size and the desktop resolution.
+WINDOW_SIZE_SCREEN_FRACTION = 0.9
 
-"""
-- `Dimensions` refers to the structural properties of a grid, matrix, or layout,
-  specifying the number of columns and rows into which the grid is partitioned.
-- `Size` denotes the physical or spatial extent of an object, characterized by
-  its width and height. These measurements are typically expressed in pixels,
-  but any unit of physical distance may be employed.
-- `Position` specifies a location using `x` and `y` coordinates. These
-  coordinates may represent a position on the screen in pixel units, or a
-  location within a grid or board, expressed in terms of columns and rows.
-"""
-Dimensions = namedtuple("Dimensions", "rows cols")
-Size = namedtuple("Size", "width height")
-Position = namedtuple("Position", "x y")
+type RGBColor = tuple[int, int, int]
+
+
+class Dimensions(NamedTuple):
+    """Structural size of a grid, in rows and columns.
+
+    Attributes:
+        rows (int): Number of rows.
+        cols (int): Number of columns.
+    """
+
+    rows: int
+    cols: int
+
+
+class Size(NamedTuple):
+    """Physical extent of an object, in width and height.
+
+    Attributes:
+        width (int): Width in pixels.
+        height (int): Height in pixels.
+    """
+
+    width: int
+    height: int
+
+
+class Position(NamedTuple):
+    """Location in grid or pixel coordinates.
+
+    Attributes:
+        x (float): Horizontal coordinate, increasing to the right.
+        y (float): Vertical coordinate, increasing downward.
+    """
+
+    x: float
+    y: float

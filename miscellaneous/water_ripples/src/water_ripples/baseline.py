@@ -8,12 +8,16 @@ from water_ripples.simulation import RippleSimulation, colorize
 
 
 class BaselineRipples(RippleSimulation):
-    """Flat ripple simulation that fills the window, with selectable render and propagate modes.
+    """Flat ripple simulation that fills the window, with selectable render and
+    propagate modes.
 
     Attributes:
-        render_mode (str): "surfarray" blits the whole array at once, "rectangle" draws each cell.
-        rgb_mode (str): How the state becomes RGB: "grayscale", "colormap" or "scaled_colormap".
-        propagate_mode (str): How the next state is computed: "numba", "numpy" or "iterative".
+        render_mode (str): "surfarray" blits the whole array at once, "rectangle" draws
+            each cell.
+        rgb_mode (str): How the state becomes RGB: "grayscale", "colormap" or
+            "scaled_colormap".
+        propagate_mode (str): How the next state is computed: "numba", "numpy" or
+            "iterative".
 
     Example:
         >>> simulation = BaselineRipples(config=ConfigManager().load_config_file())
@@ -75,8 +79,9 @@ class BaselineRipples(RippleSimulation):
         """Map the current state to an RGB array of shape (rows, cols, 3).
 
         Args:
-            mode (str): "grayscale" stacks the state into three channels. "colormap" uses the full
-                colormap. "scaled_colormap" uses a colormap that keeps the darkest color lighter.
+            mode (str): "grayscale" stacks the state into three channels. "colormap"
+                uses the full colormap. "scaled_colormap" uses a colormap that keeps the
+                darkest color lighter.
 
         Returns:
             rgb_array (np.ndarray): A uint8 array of shape (rows, cols, 3).
@@ -107,7 +112,8 @@ class BaselineRipples(RippleSimulation):
 
         Args:
             rgb_array (np.ndarray): A uint8 array of shape (rows, cols, 3).
-            mode (str): "surfarray" blits the whole array at once. "rectangle" draws each cell.
+            mode (str): "surfarray" blits the whole array at once. "rectangle" draws
+                each cell.
         """
         if mode == "surfarray":
             transposed_array = rgb_array.swapaxes(0, 1)

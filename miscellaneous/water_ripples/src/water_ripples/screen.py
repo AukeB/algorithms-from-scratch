@@ -1,4 +1,6 @@
-"""Module for picking the window size and the simulation grid from the desktop resolution."""
+"""Module for picking the window size and the simulation grid from the desktop
+resolution.
+"""
 
 import pygame as pg
 
@@ -47,12 +49,15 @@ def resolve_window_and_grid(
 
     Args:
         window_width (int | None): Window width in pixels, or None for automatic sizing.
-        window_height (int | None): Window height in pixels, or None for automatic sizing.
+        window_height (int | None): Window height in pixels, or None for automatic
+            sizing.
         number_of_columns (int): Number of columns in the simulation grid.
-        number_of_rows (int | None): Number of rows, or None to match the window aspect ratio.
+        number_of_rows (int | None): Number of rows, or None to match the window aspect
+            ratio.
 
     Returns:
-        resolved (tuple[int, int, int]): The window width, window height and number of rows.
+        resolved (tuple[int, int, int]): The window width, window height and number of
+            rows.
 
     Raises:
         ValueError: If exactly one of window_width or window_height is None.

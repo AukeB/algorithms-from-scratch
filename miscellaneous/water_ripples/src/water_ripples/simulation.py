@@ -1,4 +1,6 @@
-"""Module for the shared core of the water ripple variants: state, propagation and event loop."""
+"""Module for the shared core of the water ripple variants: state, propagation and event
+loop.
+"""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -69,12 +71,13 @@ def colorize(
 ) -> np.ndarray:
     """Map a state grid to RGB colors using the Blues_r colormap.
 
-    The normalized state is mapped to floor + span * normalized before it is looked up in the
-    colormap, so floor=0.0 and span=1.0 use the full colormap, while floor=0.1 and span=0.8 keep the
-    darkest color lighter.
+    The normalized state is mapped to floor + span * normalized before it is looked up
+    in the colormap, so floor=0.0 and span=1.0 use the full colormap, while floor=0.1
+    and span=0.8 keep the darkest color lighter.
 
     Args:
-        state (np.ndarray): The grid of state values, clipped to [0, 255] before mapping.
+        state (np.ndarray): The grid of state values, clipped to [0, 255] before
+            mapping.
         maximum_brightness (int): The value that normalizes to 1.0.
         floor (float): Position in the colormap for a state of 0.
         span (float): How much of the colormap the state range covers.
@@ -141,9 +144,9 @@ def to_trapezoid_pixels(
 class RippleSimulation(ABC):
     """Base class for the 2D water ripple variants.
 
-    The simulation keeps two grids (previous_state and current_state). Each step propagates the
-    previous grid into the current one, and then the two are swapped. Subclasses decide how the
-    mouse maps to the grid and how the state is drawn.
+    The simulation keeps two grids (previous_state and current_state). Each step
+    propagates the previous grid into the current one, and then the two are swapped.
+    Subclasses decide how the mouse maps to the grid and how the state is drawn.
 
     Attributes:
         window_width (int): Window width in pixels.
@@ -245,8 +248,8 @@ class RippleSimulation(ABC):
             my (int): The y pixel position of the mouse.
 
         Returns:
-            grid_position (tuple[int, int] | None): The (column, row) under the mouse, or None if
-                the mouse is outside the simulated area.
+            grid_position (tuple[int, int] | None): The (column, row) under the mouse,
+                or None if the mouse is outside the simulated area.
         """
 
     def _handle_mouse(self) -> None:
@@ -267,7 +270,8 @@ class RippleSimulation(ABC):
     def execute(self) -> None:
         """Run the simulation loop until the window is closed or ESC is pressed.
 
-        Each frame handles input, advances the simulation, draws it, and enforces the framerate.
+        Each frame handles input, advances the simulation, draws it, and enforces the
+        framerate.
         """
         running = True
 
