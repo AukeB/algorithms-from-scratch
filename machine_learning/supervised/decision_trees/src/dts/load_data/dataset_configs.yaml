@@ -12,17 +12,17 @@ wine:
   url: https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data
   has_header: false
   features:
-    - class
     - alcohol
     - malic_acid
     - ash
     - alkalinity
     - magnesium
     - phenols
+    - flavanoids
     - nonflavanoid_phenols
     - proanthocyanins
     - color_intensity
     - hue
     - od280_od315
     - proline
-  target: proline  # or whatever the target is for wine
+  target: class

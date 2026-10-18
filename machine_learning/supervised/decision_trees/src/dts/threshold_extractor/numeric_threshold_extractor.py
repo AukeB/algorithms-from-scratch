@@ -9,13 +9,24 @@ Classes: NumericThresholdExtractor: Extract unique values and generate split
 candidates in one call.
 
 Example:
-    >>> from src.dts.threshold_extractor.threshold_extractor import NumericThresholdExtractor
+    >>> from dts.threshold_extractor.numeric_threshold_extractor import NumericThresholdExtractor
     >>> extractor = NumericThresholdExtractor(df, "age")
     >>> thresholds = extractor.extract()
 """
 
+from itertools import pairwise
+
 import polars as pl
 from polars import DataFrame
+
+_NUMERIC_DTYPES: tuple[type[pl.DataType], ...] = (
+    pl.Float32,
+    pl.Float64,
+    pl.Int8,
+    pl.Int16,
+    pl.Int32,
+    pl.Int64,
+)
 
 
 class NumericThresholdExtractor:
@@ -52,14 +63,6 @@ class NumericThresholdExtractor:
         Raises:
             ValueError: If the column does not exist or is not numeric.
         """
-        self.numeric_types = {
-            pl.Float32,
-            pl.Float64,
-            pl.Int8,
-            pl.Int16,
-            pl.Int32,
-            pl.Int64,
-        }
         self._validate_column(df, feature_column_name)
 
         self.df = df
@@ -80,7 +83,7 @@ class NumericThresholdExtractor:
 
         col_dtype = df[feature_column_name].dtype
 
-        if col_dtype not in self.numeric_types:
+        if col_dtype not in _NUMERIC_DTYPES:
             raise ValueError(
                 f"Column '{feature_column_name}' must be numeric, got {col_dtype}"
             )
@@ -107,10 +110,11 @@ class NumericThresholdExtractor:
         Returns:
             candidates (list[float]): Midpoints between consecutive values.
         """
-        candidates = [
-            round((unique_values[i] + unique_values[i + 1]) / 2, 10)
-            for i in range(len(unique_values) - 1)
-        ]
+        candidates: list[float] = []
+
+        for lower_value, upper_value in pairwise(unique_values):
+            midpoint = round((lower_value + upper_value) / 2, 10)
+            candidates.append(midpoint)
 
         return candidates
 

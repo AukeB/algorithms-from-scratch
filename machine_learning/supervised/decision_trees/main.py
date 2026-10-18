@@ -1,6 +1,10 @@
 """Entry point for the decision tree training pipeline."""
 
-from src.dts.data_pipeline import DataPipeline
+import logging
+
+from dts.data_pipeline import DataPipeline
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -10,11 +14,13 @@ def main() -> None:
     Loads, preprocesses, and analyzes the specified dataset, preparing it
     for decision tree model training.
     """
+    logging.basicConfig(level=logging.INFO)
+
     dataset_name: str = "iris"
     pipeline = DataPipeline(dataset_name)
     df = pipeline.run()
 
-    print(df)
+    logger.info(f"Preprocessed dataset:\n{df}")
 
 
 if __name__ == "__main__":

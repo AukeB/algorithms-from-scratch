@@ -2,7 +2,8 @@
 
 from polars import DataFrame
 
-from src.dts.gini_impurity.single_threshold_evaluator import (
+from dts.gini_impurity.single_threshold_evaluator import (
+    GiniResult,
     SingleThresholdGiniEvaluator,
 )
 
@@ -20,7 +21,8 @@ class GiniImpurityEvaluator:
         feature_column_name (str): Name of the numeric feature column.
         target_column_name (str): Name of the target column (class labels).
         threshold_values (list[float]): Candidate split thresholds to evaluate.
-        results (dict): Stores Gini metrics for each threshold.
+        results (dict[float, GiniResult]): Gini metrics for each evaluated
+            threshold. Empty until evaluate_all_thresholds is called.
 
     Example:
         >>> evaluator = GiniImpurityEvaluator(df, "age", "species", [27.5, 32.5, 37.5])
@@ -48,17 +50,7 @@ class GiniImpurityEvaluator:
         self.target_column_name = target_column_name
         self.threshold_values = threshold_values
 
-        # Initialize results dict with structure for each threshold
-        self.results: dict = {
-            threshold: {
-                "gini_left": None,
-                "gini_right": None,
-                "n_left": None,
-                "n_right": None,
-                "weighted_gini": None,
-            }
-            for threshold in threshold_values
-        }
+        self.results: dict[float, GiniResult] = {}
 
     def evaluate_all_thresholds(self) -> None:
         """Evaluate all candidate thresholds.
@@ -73,6 +65,7 @@ class GiniImpurityEvaluator:
                 self.target_column_name,
                 threshold,
             )
+
             self.results[threshold] = single_evaluator.evaluate()
 
     def get_best_threshold(self) -> float:
@@ -82,15 +75,17 @@ class GiniImpurityEvaluator:
             best_threshold (float): The threshold value with best split quality.
 
         Raises:
-            ValueError: If results dict is empty or contains no valid splits.
+            ValueError: If no thresholds have been evaluated yet.
         """
         if not self.results:
             raise ValueError(
                 "No thresholds evaluated. Call evaluate_all_thresholds() first."
             )
 
+        thresholds = self.results.keys()
+
         best_threshold = min(
-            self.results.keys(),
+            thresholds,
             key=lambda t: self.results[t]["weighted_gini"],
         )
 

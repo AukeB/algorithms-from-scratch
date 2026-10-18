@@ -1,19 +1,19 @@
 """Module for utility functions relating to loading datasets."""
-from ty_extensions._internal import Unknown
 
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 
-def load_yaml(file_path: Path) -> dict:
+def load_yaml(file_path: Path) -> dict[str, Any]:
     """Load a YAML file and return its contents as a dictionary.
 
     Args:
         file_path (Path): Path to the YAML file to load.
 
     Returns:
-        content (dict): The parsed YAML content as a dictionary.
+        content (dict[str, Any]): The parsed YAML content as a dictionary.
 
     Raises:
         FileNotFoundError: If the file does not exist.

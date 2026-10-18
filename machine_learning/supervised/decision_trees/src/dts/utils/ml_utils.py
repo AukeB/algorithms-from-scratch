@@ -20,11 +20,16 @@ def split_data(
     Returns:
         df_left (DataFrame): Rows where feature_column_name < threshold_value.
         df_right (DataFrame): Rows where feature_column_name >= threshold_value.
+
+    Raises:
+        ValueError: If the feature column does not exist in the dataframe.
     """
     if feature_column_name not in df.columns:
         raise ValueError(f"Column '{feature_column_name}' not found in dataframe")
 
-    df_left = df.filter(pl.col(feature_column_name) < threshold_value)
-    df_right = df.filter(pl.col(feature_column_name) >= threshold_value)
+    feature_column = pl.col(feature_column_name)
+
+    df_left = df.filter(feature_column < threshold_value)
+    df_right = df.filter(feature_column >= threshold_value)
 
     return df_left, df_right

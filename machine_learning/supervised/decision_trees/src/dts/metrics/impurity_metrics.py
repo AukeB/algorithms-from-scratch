@@ -1,13 +1,15 @@
 """Module for impurity metric computations (Gini, entropy, variance, etc.)."""
 
+from collections.abc import Hashable, Sequence
 
-def compute_gini(target_labels: list) -> float:
+
+def compute_gini(target_labels: Sequence[Hashable]) -> float:
     """Compute Gini impurity for a group of class target_labels.
 
     Gini = 1 - Σ(p_i)², where p_i is the proportion of class i.
 
     Args:
-        target_labels (list): Class target_labels for a group.
+        target_labels (Sequence[Hashable]): Class target_labels for a group.
 
     Returns:
         gini (float): Gini impurity value (0 = pure, 1 = mixed).
@@ -16,7 +18,8 @@ def compute_gini(target_labels: list) -> float:
         return 0.0
 
     # Count occurrences of each class
-    class_counts = {}
+    class_counts: dict[Hashable, int] = {}
+
     for label in target_labels:
         class_counts[label] = class_counts.get(label, 0) + 1
 

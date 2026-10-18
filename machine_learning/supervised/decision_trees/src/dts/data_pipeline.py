@@ -1,13 +1,17 @@
 """Module for data loading and preprocessing pipeline."""
 
+import logging
+
 from polars import DataFrame
 
-from src.dts.gini_impurity.gini_impurity_evaluator import GiniImpurityEvaluator
-from src.dts.load_data.load_data import get_dataset_config, load_data
-from src.dts.preprocess_data import DataPreprocessor
-from src.dts.threshold_extractor.numeric_threshold_extractor import (
+from dts.gini_impurity.gini_impurity_evaluator import GiniImpurityEvaluator
+from dts.load_data.load_data import get_dataset_config, load_data
+from dts.preprocess_data import DataPreprocessor
+from dts.threshold_extractor.numeric_threshold_extractor import (
     NumericThresholdExtractor,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DataPipeline:
@@ -46,7 +50,7 @@ class DataPipeline:
         numeric feature.
 
         Generates midpoint thresholds between consecutive unique values,
-        evaluates Gini impurity for each threshold, and displays results.
+        evaluates Gini impurity for each threshold, and logs the results.
         Currently only supports numeric features; categorical features will be
         handled in future iterations.
         """
@@ -54,9 +58,9 @@ class DataPipeline:
         target_column_name = dataset_config["target"]
 
         for col_name in dataset_config["features"]:
-            print(f"\n{'=' * 60}")
-            print(f"Feature: {col_name}")
-            print(f"{'=' * 60}")
+            logger.info("=" * 60)
+            logger.info(f"Feature: {col_name}")
+            logger.info("=" * 60)
 
             # Extract split candidates
             extractor = NumericThresholdExtractor(self.df, col_name)
@@ -68,20 +72,20 @@ class DataPipeline:
             )
             evaluator.evaluate_all_thresholds()
 
-            # Print results for each threshold
+            # Log results for each threshold
             for threshold, metrics in evaluator.results.items():
-                print(
-                    f"\nThreshold: {threshold:.4f} | "
+                logger.info(
+                    f"Threshold: {threshold:.4f} | "
                     f"Weighted Gini: {metrics['weighted_gini']:.4f} | "
                     f"n_left: {metrics['n_left']} | "
                     f"n_right: {metrics['n_right']}"
                 )
 
-            # Print best threshold
+            # Log best threshold
             best_threshold = evaluator.get_best_threshold()
-            print(
-                f"\n>>> Best threshold: {best_threshold:.4f} "
-                f"(Gini: {evaluator.results[best_threshold]['weighted_gini']:.4f})"
+            best_gini = evaluator.results[best_threshold]["weighted_gini"]
+            logger.info(
+                f">>> Best threshold: {best_threshold:.4f} (Gini: {best_gini:.4f})"
             )
 
     def run(self) -> DataFrame:
