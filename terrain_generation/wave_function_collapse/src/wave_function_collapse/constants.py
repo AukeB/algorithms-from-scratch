@@ -1,34 +1,48 @@
-"""Project-specific constants."""
+"""Module for project constants and shared type definitions."""
 
-from collections import namedtuple
 from pathlib import Path
+from typing import NamedTuple
 
-# Paths.
-CONFIG_FILE_PATH = Path("src/wave_function_collapse/configs/config.yaml")
-BITMAPS_INPUT_DIRECTORY_PATH = Path("src/wave_function_collapse/bitmaps/input/")
-BITMAPS_EXPORT_DIRECTORY_PATH = Path("src/wave_function_collapse/bitmaps/export")
+_PACKAGE_DIRECTORY = Path(__file__).parent
 
-"""`Dimensions` refers to the structural properties of a grid, matrix, or layout, specifying the
-number of columns and rows into which the grid is partitioned.
+CONFIG_FILE_PATH = _PACKAGE_DIRECTORY / "configs" / "config.yaml"
+BITMAPS_INPUT_DIRECTORY_PATH = _PACKAGE_DIRECTORY / "bitmaps" / "input"
+BITMAPS_EXPORT_DIRECTORY_PATH = _PACKAGE_DIRECTORY / "bitmaps" / "export"
 
-`Size` denotes the physical or spatial extent of an object, characterized by its width and height.
-These measurements are typically expressed in pixels, but any unit of physical distance may be
-employed.
-"""
-Dimensions = namedtuple("Dimensions", "rows cols")
-Size = namedtuple("Size", "width height")
+# Ratio between the PyGame window size and the desktop resolution.
+WINDOW_SIZE_SCREEN_FRACTION = 0.95
 
-# Type definitions.
 type RGBColor = tuple[int, int, int]
 type TileValue = tuple[tuple[str, ...], ...]
 
-# Other constants.
-DIRECTIONS: dict[str, list[int]] = {
-    "up": [-1, 0],
-    "down": [1, 0],
-    "left": [0, -1],
-    "right": [0, 1],
+# Offsets (row, column) from a grid cell to its neighbor in each direction.
+DIRECTIONS: dict[str, tuple[int, int]] = {
+    "up": (-1, 0),
+    "down": (1, 0),
+    "left": (0, -1),
+    "right": (0, 1),
 }
 
-# Determines the ratio between the PyGame window resolution and the screen resolution
-WINDOW_SIZE_SCREEN_FRACTION = 0.95
+
+class Dimensions(NamedTuple):
+    """Count of elements in rows and columns.
+
+    Attributes:
+        rows (int): Number of rows.
+        cols (int): Number of columns.
+    """
+
+    rows: int
+    cols: int
+
+
+class Size(NamedTuple):
+    """Pixel extent of an object.
+
+    Attributes:
+        width (int): Width in pixels.
+        height (int): Height in pixels.
+    """
+
+    width: int
+    height: int

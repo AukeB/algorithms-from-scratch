@@ -111,3 +111,13 @@ Steps 7–9 repeat until all cells are collapsed. If a cell's options are ever r
 - A [blog post](https://www.gridbugs.org/wave-function-collapse/). Haven't read it yet.
 - This [blog post](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/) by Robert Heaton is a good one to start with. It explains the algorithm from a basic level and also introduces an even simpler version of the algorithm which makes it easier to understand the more advanced versions.
 - [Model synthesis](https://paulmerrell.org/model-synthesis/) by Paul Merrell. A 3-dimensional application of the WFC algorithm.
+## Ideas and known limitations
+
+- Add contradiction recovery. A contradiction currently stops the run with an error, and the
+  simplest recovery is to restart. Backtracking to the last collapse decision would be better.
+- Add a visualize option to `WaveFunctionCollapse`, that skips `compute_superposition_tile`
+  during propagation. That would speed things up when no drawing is needed.
+- Implement `mode_boundary_conditions` alternatives. Only `wrap_around` is implemented, and
+  `clamping`, `mirroring` and `noise` are rejected at start-up.
+- Implement `mode_model` alternatives. Only `overlapping` is implemented, and `simple-tiled` and
+  `even-simpler-tiled` are rejected at start-up.

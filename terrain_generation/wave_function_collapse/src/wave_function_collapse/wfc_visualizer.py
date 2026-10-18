@@ -1,172 +1,181 @@
-"""Module for visualizing the Wave Function Collapse algorithm using pygame."""
+"""Module for drawing the Wave Function Collapse grid with pygame."""
 
 import pygame as pg
 
-from src.wave_function_collapse.config_manager import ConfigModel
-from src.wave_function_collapse.grid_cell import GridCell
-from src.wave_function_collapse.utils.utils_pygame import (
+from wave_function_collapse.config_model import ConfigModel
+from wave_function_collapse.constants import Dimensions, RGBColor, Size
+from wave_function_collapse.grid_cell import GridCell
+from wave_function_collapse.utils.utils_pygame import (
     get_window_size_from_screen_resolution,
 )
-from src.wave_function_collapse.constants import Size, Dimensions, RGBColor
+
+_MARGIN_SIZE = 20
 
 
 class WFCVisualizer:
-    """Renders the WFC grid and tile debug views to a pygame window.
+    """Draw the state of the grid in a pygame window, one square per grid cell.
 
-    Handles all visual output for the algorithm, including the main grid visualization during
-    collapse, a tile overview for inspecting extracted tiles and their weights, and a neighbor debug
-    view for inspecting valid adjacencies per direction.
+    Attributes:
+        screen_size (Size): Window size in pixels.
+        grid_dimensions (Dimensions): Number of rows and columns of the output grid.
+        tile_dimensions (Dimensions): Number of rows and columns of each tile.
+        margin_size (int): Pixel margin around the grid.
+        tile_size_px (int): Side length of one grid square in pixels.
+        show_superposition (bool): Whether uncollapsed cells show their average colour.
+        grid_background_color (RGBColor): Colour of uncollapsed cells when superposition
+            is off.
+        inverted_color_mapping (dict[str, RGBColor]): Maps each character to its colour.
+        screen (pg.Surface): The PyGame window surface.
+
+    Example:
+        >>> visualizer = WFCVisualizer(config=config, color_mapping=color_mapping)
+        >>> visualizer.visualize(grid=wfc.grid)
     """
 
     def __init__(
         self,
         config: ConfigModel,
-        grid_dimensions: Dimensions,
-        tile_dimensions: Dimensions,
         color_mapping: dict[RGBColor, str],
-        margin_size: int = 20,
     ) -> None:
-        """Initialise pygame and configure the visualizer for the given grid.
+        """Open the window and size the grid squares to fit it.
 
         Args:
             config (ConfigModel): The validated configuration model.
-            grid_dimensions (Dimensions): The rows and columns of the output grid in tiles.
-            tile_dimensions (Dimensions): The rows and columns of each tile in cells.
-            color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples to characters.
-            margin_size (int): Pixel margin around the grid on all sides, defaults to 20.
+            color_mapping (dict[RGBColor, str]): Maps each colour to its character.
         """
         pg.init()
 
-        self.config = config
-        self.screen_size = Size(*get_window_size_from_screen_resolution())
-        self.grid_dimensions = grid_dimensions
-        self.tile_dimensions = tile_dimensions
-        self.margin_size = margin_size
+        window_width, window_height = get_window_size_from_screen_resolution()
+        self.screen_size = Size(width=window_width, height=window_height)
+        self.grid_dimensions = Dimensions(
+            rows=config.general.grid_dim,
+            cols=config.general.grid_dim,
+        )
+        self.tile_dimensions = Dimensions(
+            rows=config.general.tile_dim,
+            cols=config.general.tile_dim,
+        )
+        self.margin_size = _MARGIN_SIZE
         self.show_superposition = config.general.show_superposition
-        self.grid_background_color = tuple(config.general.grid_background_color)
+        self.grid_background_color = config.general.grid_background_color
 
-        # Invert the color mapping so RGB tuples can be resolved back to characters.
-        self.inverted_color_mapping = {v: k for k, v in color_mapping.items()}
+        self.inverted_color_mapping = {
+            character: color for color, character in color_mapping.items()
+        }
 
-        self.tile_size, self.cell_size = self._compute_tile_and_cell_size()
+        available_height = self.screen_size.height - 2 * self.margin_size
+        self.tile_size_px = int(available_height / self.grid_dimensions.rows)
+
         self.screen = pg.display.set_mode(
             (self.screen_size.width, self.screen_size.height)
         )
 
-    def _compute_tile_and_cell_size(
-        self,
-        inner_margin: int = 0,
-        square_grid: bool = True,
-    ) -> tuple[Size, Size]:
-        """Compute the pixel dimensions of a single tile and a single cell.
-
-        Tile size is derived from the available screen space divided by the grid dimensions. Cell
-        size is the tile size divided by the tile dimensions, with an optional inner margin
-        subtracted first.
-
-        Args:
-            inner_margin (int): Pixel margin subtracted from tile size before dividing into cells,
-                defaults to 0.
-            square_grid (bool): If True, tile width is derived from screen height to ensure square
-                tiles regardless of aspect ratio, defaults to True.
-
-        Returns:
-            sizes (tuple[Size, Size]): A tuple of (tile_size, cell_size) in pixels.
-        """
-        tile_size = Size(
-            int(
-                (self.screen_size.height - 2 * self.margin_size)
-                / self.grid_dimensions.rows
-            )
-            if square_grid
-            else int(
-                (self.screen_size.width - 2 * self.margin_size)
-                / self.grid_dimensions.rows
-            ),
-            int(
-                (self.screen_size.height - 2 * self.margin_size)
-                / self.grid_dimensions.rows
-            ),
-        )
-
-        cell_size = Size(
-            int((tile_size.width - inner_margin) / self.tile_dimensions.rows),
-            int((tile_size.height - inner_margin) / self.tile_dimensions.rows),
-        )
-
-        return tile_size, cell_size
-
     def _compute_tile_position(
-        self, row_tile_idx: int | float, col_tile_idx: int | float
+        self,
+        row_index: float,
+        col_index: float,
     ) -> tuple[int, int]:
-        """Compute the pixel position of a tile's top-left corner on the screen.
+        """Find the pixel position of the top-left corner of a grid square.
 
         Args:
-            row_tile_idx (int | float): The row index of the tile in the grid. Accepts float to
-                support fractional positioning in debug views.
-            col_tile_idx (int | float): The column index of the tile in the grid. Accepts float to
-                support fractional positioning in debug views.
+            row_index (int | float): Row of the square in the grid.
+            col_index (int | float): Column of the square in the grid.
 
         Returns:
-            position (tuple[int, int]): A (y, x) pixel position tuple.
+            position (tuple[int, int]): The (y, x) pixel position.
         """
-        y = self.margin_size + row_tile_idx * self.tile_size.height
-        x = self.margin_size + col_tile_idx * self.tile_size.width
-
-        position = (y, x)
+        y = self.margin_size + row_index * self.tile_size_px
+        x = self.margin_size + col_index * self.tile_size_px
+        position = (int(y), int(x))
 
         return position
 
-    def _draw_tile(self, cell: GridCell, y: int, x: int) -> None:
-        """Draw a single grid cell as a filled rectangle at pixel position (x, y).
+    def _center_index(self) -> int:
+        """Find the index of the centre cell of a tile.
 
-        If the cell has collapsed, the character at the center of the tile value is resolved to an
-        RGB color via the inverted color mapping. If uncollapsed and show_superposition is True, the
-        center pixel of the superposition tile is used. If uncollapsed and show_superposition is
-        False, the grid background color is used instead.
-
-        Args:
-            cell (GridCell): The grid cell to draw.
-            y (int): The y pixel coordinate of the tile's top-left corner.
-            x (int): The x pixel coordinate of the tile's top-left corner.
+        Returns:
+            center_index (int): The row and column index of the centre cell.
         """
-        if cell.tile is not None:
-            cell_value = self.inverted_color_mapping[cell.tile.value[1][1]]
-        elif self.show_superposition:
-            cell_value = cell.superposition_tile[1][1]  # type: ignore
-        else:
-            cell_value = self.grid_background_color
+        center_index = self.tile_dimensions.rows // 2
 
-        cell_rect = pg.Rect(x, y, self.tile_size.width, self.tile_size.height)
-        pg.draw.rect(self.screen, cell_value, cell_rect)
+        return center_index
 
-    def visualize(self, grid: list[list[GridCell]]) -> None:
-        """Render the current state of the WFC grid to the pygame window.
+    def _cell_color(self, cell: GridCell) -> RGBColor:
+        """Choose the colour that represents a cell.
 
-        Clears the screen, draws each grid cell at its computed pixel position, flips the display
-        buffer to make the frame visible, then polls for quit events — exiting cleanly on window
-        close or the Escape key.
+        A collapsed cell shows the colour at the centre of its tile. An uncollapsed cell
+        shows the centre of its superposition if that is on, and the background colour
+        otherwise.
 
         Args:
-            grid (list[list[GridCell]]): The 2D grid of GridCell instances to render.
+            cell (GridCell): The cell to colour.
+
+        Returns:
+            color (RGBColor): The colour of the cell.
+        """
+        center_index = self._center_index()
+
+        if cell.tile is not None:
+            center_character = cell.tile.value[center_index][center_index]
+            color = self.inverted_color_mapping[center_character]
+        elif self.show_superposition and cell.superposition_tile is not None:
+            color = cell.superposition_tile[center_index][center_index]
+        else:
+            color = self.grid_background_color
+
+        return color
+
+    def _draw_tile(self, cell: GridCell, y: int, x: int) -> None:
+        """Draw one grid square at a pixel position.
+
+        Args:
+            cell (GridCell): The cell whose square is drawn.
+            y (int): Pixel row of the square's top-left corner.
+            x (int): Pixel column of the square's top-left corner.
+        """
+        color = self._cell_color(cell=cell)
+        square = pg.Rect(x, y, self.tile_size_px, self.tile_size_px)
+
+        pg.draw.rect(self.screen, color, square)
+
+    def _handle_events(self) -> bool:
+        """Read the pending events. Closing the window or pressing ESC asks to stop.
+
+        Returns:
+            keep_running (bool): False if the user asked to stop, otherwise True.
+        """
+        keep_running = True
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT or (
+                event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE
+            ):
+                keep_running = False
+
+        return keep_running
+
+    def visualize(self, grid: list[list[GridCell]]) -> bool:
+        """Draw the grid and show the frame, then read the events.
+
+        Args:
+            grid (list[list[GridCell]]): The grid to draw.
+
+        Returns:
+            keep_running (bool): False if the user asked to stop, otherwise True.
         """
         self.screen.fill((0, 0, 0))
 
-        for row_tile_idx in range(self.grid_dimensions.rows):
-            for col_tile_idx in range(self.grid_dimensions.rows):
-                y_pixel, x_pixel = self._compute_tile_position(
-                    row_tile_idx, col_tile_idx
-                )
-                cell = grid[row_tile_idx][col_tile_idx]
-                self._draw_tile(cell, y_pixel, x_pixel)
+        for row_index in range(self.grid_dimensions.rows):
+            for col_index in range(self.grid_dimensions.cols):
+                y, x = self._compute_tile_position(row_index, col_index)
+                self._draw_tile(cell=grid[row_index][col_index], y=y, x=x)
 
         pg.display.flip()
 
-        for event in pg.event.get():
-            if (
-                event.type == pg.QUIT
-                or event.type == pg.KEYDOWN
-                and event.key == pg.K_ESCAPE
-            ):
-                pg.quit()
-                raise SystemExit
+        keep_running = self._handle_events()
+
+        return keep_running
+
+    def quit(self) -> None:
+        """Shut down pygame."""
+        pg.quit()

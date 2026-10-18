@@ -1,120 +1,128 @@
-"""Module for reading bitmap data from .xlsx files and exporting them as .png images."""
+"""Module for reading bitmaps from .xlsx files and exporting them as images."""
 
 import logging
-
 from pathlib import Path
-from PIL import Image
 
-from src.wave_function_collapse.config_manager import ConfigModel
-from src.wave_function_collapse.utils.utils_excel import (
-    load_excel_worksheet,
-    detect_bitmap_dimensions,
-    extract_bitmap_from_worksheet,
-)
-from src.wave_function_collapse.constants import (
-    BITMAPS_INPUT_DIRECTORY_PATH,
+from PIL import Image, ImageDraw
+
+from wave_function_collapse.config_model import ConfigModel
+from wave_function_collapse.constants import (
     BITMAPS_EXPORT_DIRECTORY_PATH,
+    BITMAPS_INPUT_DIRECTORY_PATH,
     RGBColor,
 )
+from wave_function_collapse.utils.utils_excel import (
+    detect_bitmap_dimensions,
+    extract_bitmap_from_worksheet,
+    load_excel_worksheet,
+)
+
+logger = logging.getLogger(__name__)
+
+_FIRST_IDENTIFIER = "A"
 
 
 class Bitmap:
-    """Handles reading bitmap data from .xlsx files and exporting them as images."""
+    """Read a bitmap from an .xlsx file, and optionally export it as an image.
 
-    def __init__(self, config: ConfigModel) -> None:
-        """Load the bitmap from the configured .xlsx file and optionally export it as an image.
+    Attributes:
+        bitmap_dimensions (Dimensions): Number of rows and columns of the bitmap.
+        bitmap (list[list[RGBColor]]): The bitmap as rows of RGB colours.
 
-        1. Resolve the input file path from the bitmaps input directory and configured file name.
-        2. Load the worksheet and detect the bitmap dimensions from its borders.
-        3. Extract the bitmap as a 2D list of RGB tuples.
-        4. If export is enabled, export the bitmap as an image immediately.
+    Example:
+        >>> bitmap_instance = Bitmap(config=ConfigManager().read_config())
+        >>> bitmap_instance.bitmap[0][0]
+        (0, 0, 0)
+    """
+
+    def __init__(
+        self,
+        config: ConfigModel,
+        input_directory: Path = BITMAPS_INPUT_DIRECTORY_PATH,
+        export_directory: Path = BITMAPS_EXPORT_DIRECTORY_PATH,
+    ) -> None:
+        """Load the bitmap, and export it as an image if the config asks for it.
 
         Args:
             config (ConfigModel): The validated configuration model.
+            input_directory (Path): Folder that contains the .xlsx file.
+            export_directory (Path): Folder the image export is written to.
         """
         input_file_name = config.bitmap.input_file_name
-        bitmaps_input_directory_path = BITMAPS_INPUT_DIRECTORY_PATH
-        input_file_path = bitmaps_input_directory_path / input_file_name
+        input_file_path = input_directory / input_file_name
 
         worksheet = load_excel_worksheet(excel_file_path=input_file_path)
         self.bitmap_dimensions = detect_bitmap_dimensions(worksheet=worksheet)
         self.bitmap = extract_bitmap_from_worksheet(
-            worksheet=worksheet, bitmap_dimensions=self.bitmap_dimensions
+            worksheet=worksheet,
+            bitmap_dimensions=self.bitmap_dimensions,
         )
 
-        self.bitmap_export = config.bitmap.export
+        if config.bitmap.export:
+            export_file_name = input_file_name.stem + config.bitmap.export_file_format
+            export_file_path = export_directory / export_file_name
+            background_color = config.bitmap.background_color
 
-        # Settings that are needed when exporting the .xlsx file to an image.
-        if self.bitmap_export:
-            self.bitmap_export_file_format = config.bitmap.export_file_format
-            self.bitmap_export_file_path = BITMAPS_EXPORT_DIRECTORY_PATH / Path(
-                input_file_name.stem + self.bitmap_export_file_format
+            self.export_bitmap_as_image(
+                export_file_path=export_file_path,
+                cell_size=config.bitmap.cell_size,
+                background_color=background_color,
             )
-            self.bitmap_cell_size = config.bitmap.cell_size
-            self.bitmap_background_color = tuple(config.bitmap.background_color)
 
-            self.export_bitmap_as_image()
-
-    def export_bitmap_as_image(self) -> None:
-        """Export the bitmap as a scaled image file.
-
-        1. Determine the output image dimensions by scaling the bitmap dimensions by cell size.
-        2. Create a blank RGB image filled with the configured background color.
-        3. Write each bitmap color into the corresponding block of pixels.
-        4. Save the image to the configured export path.
-        5. Log the output path.
-        """
-        img_width = self.bitmap_cell_size * self.bitmap_dimensions.cols
-        img_height = self.bitmap_cell_size * self.bitmap_dimensions.rows
-
-        image = Image.new(
-            mode="RGB",
-            size=(img_width, img_height),
-            color=tuple(self.bitmap_background_color),
-        )
-
-        for y, bitmap_row in enumerate(self.bitmap):
-            for x, color in enumerate(bitmap_row):
-                for dx in range(self.bitmap_cell_size):
-                    for dy in range(self.bitmap_cell_size):
-                        image.putpixel(
-                            (
-                                x * self.bitmap_cell_size + dx,
-                                y * self.bitmap_cell_size + dy,
-                            ),
-                            color,
-                        )
-
-        image.save(self.bitmap_export_file_path)
-
-        logging.info(f"Bitmap exported as {self.bitmap_export_file_path}")
-
-    def create_color_mapping(self, bitmap: list[list[RGBColor]]) -> dict[RGBColor, str]:
-        """Assign a unique single character to each distinct color in the bitmap.
-
-        1. Iterate over every color in the bitmap row by row.
-        2. If the color has not been seen before, map it to the current character.
-        3. Advance the character by one Unicode codepoint for the next new color.
-        4. Return the completed color-to-character mapping.
+    def export_bitmap_as_image(
+        self,
+        export_file_path: Path,
+        cell_size: int,
+        background_color: RGBColor,
+    ) -> None:
+        """Save the bitmap as an image, with each bitmap cell drawn as a square of
+        pixels.
 
         Args:
-            bitmap (list[list[RGBColor]]): A 2D list of RGB tuples representing the bitmap.
+            export_file_path (Path): Where the image is written.
+            cell_size (int): Width and height of one bitmap cell in pixels.
+            background_color (RGBColor): Background colour of the image.
+        """
+        image_width = cell_size * self.bitmap_dimensions.cols
+        image_height = cell_size * self.bitmap_dimensions.rows
+        image = Image.new(
+            mode="RGB",
+            size=(image_width, image_height),
+            color=background_color,
+        )
+        draw = ImageDraw.Draw(image)
+
+        for row_index, bitmap_row in enumerate(self.bitmap):
+            for col_index, color in enumerate(bitmap_row):
+                left = col_index * cell_size
+                top = row_index * cell_size
+                right = left + cell_size - 1
+                bottom = top + cell_size - 1
+
+                draw.rectangle([left, top, right, bottom], fill=color)
+
+        image.save(export_file_path)
+
+        logger.info(f"Bitmap exported as {export_file_path}")
+
+    def create_color_mapping(self, bitmap: list[list[RGBColor]]) -> dict[RGBColor, str]:
+        """Give each distinct colour in the bitmap its own character, starting at "A".
+
+        Args:
+            bitmap (list[list[RGBColor]]): The bitmap as rows of RGB colours.
 
         Returns:
-            color_mapping (dict[RGBColor, str]): A dict mapping each unique RGB tuple to a distinct
+            color_mapping (dict[RGBColor, str]): Maps each distinct colour to a
                 character.
         """
         color_mapping: dict[RGBColor, str] = {}
-        current_char = "A"
 
         for bitmap_row in bitmap:
             for cell_color in bitmap_row:
                 if cell_color not in color_mapping:
-                    color_mapping[cell_color] = current_char
-                    # chr() converts an integer codepoint back to a character, and ord() does the reverse.
-                    # Together they increment the current character by one Unicode codepoint, e.g. 'A' -> 'B' -> 'C'.
-                    # This would fail if the number of distinct colors exceeded the Unicode ceiling (~1.1M),
-                    current_char = chr(ord(current_char) + 1)
+                    next_code_point = ord(_FIRST_IDENTIFIER) + len(color_mapping)
+                    identifier = chr(next_code_point)
+                    color_mapping[cell_color] = identifier
 
         return color_mapping
 
@@ -123,15 +131,14 @@ class Bitmap:
         bitmap: list[list[RGBColor]],
         color_mapping: dict[RGBColor, str],
     ) -> list[list[str]]:
-        """Replace each RGB tuple in the bitmap with its mapped character.
+        """Replace each colour in the bitmap with its character.
 
         Args:
-            bitmap (list[list[RGBColor]]): A 2D list of RGB tuples representing the bitmap.
-            color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples to characters.
+            bitmap (list[list[RGBColor]]): The bitmap as rows of RGB colours.
+            color_mapping (dict[RGBColor, str]): Maps each colour to a character.
 
         Returns:
-            mapped_bitmap (list[list[str]]): A 2D list of characters representing the color-mapped
-                bitmap.
+            mapped_bitmap (list[list[str]]): The bitmap as rows of characters.
         """
         mapped_bitmap = [[color_mapping[color] for color in row] for row in bitmap]
 

@@ -1,24 +1,49 @@
 """Module for the Wave Function Collapse algorithm."""
 
-import time
-import random as rd
+import random
+from collections import Counter, defaultdict
 
-from collections import defaultdict, Counter
-
-from src.wave_function_collapse.config_manager import ConfigModel
-from src.wave_function_collapse.tile import Tile
-from src.wave_function_collapse.grid_cell import GridCell
-from src.wave_function_collapse.wfc_visualizer import WFCVisualizer
-from src.wave_function_collapse.constants import Dimensions, RGBColor, DIRECTIONS
+from wave_function_collapse.config_model import ConfigModel
+from wave_function_collapse.constants import DIRECTIONS, Dimensions, RGBColor
+from wave_function_collapse.errors import ContradictionError
+from wave_function_collapse.grid_cell import GridCell
+from wave_function_collapse.tile import Tile
+from wave_function_collapse.wfc_visualizer import WFCVisualizer
 
 
 class WaveFunctionCollapse:
-    """Implements the Wave Function Collapse algorithm on a 2D grid.
+    """Fill a grid with tiles that look locally like the input bitmap.
 
-    The algorithm extracts all possible tiles and their frequencies from an input bitmap, then
-    iteratively collapses grid cells to a single tile by choosing the cell with the lowest entropy,
-    selecting a tile weighted by frequency, and propagating the resulting constraints to neighboring
-    cells.
+    The tiles and their frequencies come from the bitmap. Each step collapses the
+    uncollapsed cell with the fewest options to one tile, chosen at random by frequency,
+    and then propagates the consequences to its neighbors.
+
+    Attributes:
+        bitmap (list[list[str]]): The bitmap as rows of characters.
+        bitmap_dimensions (Dimensions): Number of rows and columns of the bitmap.
+        grid_dimensions (Dimensions): Number of rows and columns of the output grid.
+        tile_dimensions (Dimensions): Number of rows and columns of each tile.
+        recursion_depth (int): How many cells outward constraints propagate per
+            collapse.
+        show_superposition (bool): Whether uncollapsed cells compute their average
+            colour.
+        color_mapping (dict[RGBColor, str]): Maps each colour to its character.
+        inverted_color_mapping (dict[str, RGBColor]): Maps each character to its colour.
+        directions (dict[str, tuple[int, int]]): Offsets to the neighbor in each
+            direction.
+        rng (random.Random): Random generator for the choices made during collapse.
+        visualizer (WFCVisualizer | None): Draws each step, or None to run without
+            drawing.
+        tile_weights (dict[Tile, float]): The frequency weight of each unique tile.
+        all_tiles (list[Tile]): Every tile extracted from the bitmap, duplicates
+            included.
+        tile_set (set[Tile]): The unique tiles.
+        neighbors (defaultdict): For each tile and direction, the tiles allowed there.
+        grid (list[list[GridCell]]): The output grid.
+
+    Example:
+        >>> wfc = WaveFunctionCollapse(config=config, bitmap=mapped_bitmap, color_mapping=mapping)
+        >>> wfc.collapse_grid()
     """
 
     def __init__(
@@ -26,34 +51,47 @@ class WaveFunctionCollapse:
         config: ConfigModel,
         bitmap: list[list[str]],
         color_mapping: dict[RGBColor, str],
+        visualizer: WFCVisualizer | None = None,
+        rng: random.Random | None = None,
     ) -> None:
-        """Initialise the WFC algorithm with the input bitmap and configuration.
-
-        1. Store the config, bitmap, dimensions, and color mapping.
-        2. Validate that the tile dimensions do not exceed the bitmap dimensions.
-        3. Extract all tiles and their frequency weights from the bitmap.
-        4. Compute the set of valid neighbors for each tile in each direction.
-        5. Initialise the grid with all tiles as options for each cell.
-        6. Initialise the visualizer.
+        """Extract the tiles from the bitmap, and start with every cell open.
 
         Args:
-            config (ConfigModel): The validated pydantic configuration model.
-            bitmap (list[list[str]]): The color-mapped bitmap as a 2D list of characters.
-            color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples to characters.
+            config (ConfigModel): The validated configuration model.
+            bitmap (list[list[str]]): The bitmap as rows of characters.
+            color_mapping (dict[RGBColor, str]): Maps each colour to its character.
+            visualizer (WFCVisualizer | None): Draws each step. None runs without
+                drawing.
+            rng (random.Random | None): Random generator for the collapse choices.
+                Defaults to a new, unseeded generator.
+
+        Raises:
+            NotImplementedError: If the configured model or boundary mode is not
+                implemented.
         """
+        self._validate_modes(config=config)
+
         self.bitmap = bitmap
-        self.bitmap_dimensions = Dimensions(len(self.bitmap[0]), len(self.bitmap))
+        self.bitmap_dimensions = Dimensions(rows=len(bitmap), cols=len(bitmap[0]))
         self.grid_dimensions = Dimensions(
-            config.general.grid_dim, config.general.grid_dim
+            rows=config.general.grid_dim,
+            cols=config.general.grid_dim,
         )
         self.tile_dimensions = Dimensions(
-            config.general.tile_dim, config.general.tile_dim
+            rows=config.general.tile_dim,
+            cols=config.general.tile_dim,
         )
         self.recursion_depth = config.general.recursion_depth
         self.show_superposition = config.general.show_superposition
         self.color_mapping = color_mapping
-
+        self.inverted_color_mapping = {
+            character: color for color, character in color_mapping.items()
+        }
         self.directions = DIRECTIONS
+        self.rng = rng if rng is not None else random.Random()
+        self.visualizer = visualizer
+
+        self._flagged_cells: set[tuple[int, int]] = set()
 
         self._validate_tile_and_bitmap_dimensions()
         self.tile_weights, self.all_tiles = self._compute_tiles_and_weights()
@@ -61,100 +99,110 @@ class WaveFunctionCollapse:
         self.neighbors = self._compute_neighbors()
         self.grid = self._initialize_grid()
 
-        self.wfc_visualizer = WFCVisualizer(
-            config=config,
-            grid_dimensions=self.grid_dimensions,
-            tile_dimensions=self.tile_dimensions,
-            color_mapping=self.color_mapping,
-        )
+    def _validate_modes(self, config: ConfigModel) -> None:
+        """Check that the configured model and boundary mode are implemented.
 
-    def _validate_tile_and_bitmap_dimensions(self) -> None:
-        """Validate that the tile dimensions do not exceed the bitmap dimensions.
+        Args:
+            config (ConfigModel): The validated configuration model.
 
         Raises:
-            ValueError: If either tile dimension is larger than the smallest bitmap dimension.
+            NotImplementedError: If the model is not "overlapping", or the boundary mode
+                is not "wrap_around".
         """
-        min_bitmap_dim = min(self.bitmap_dimensions.cols, self.bitmap_dimensions.rows)
+        if config.modes.mode_model != "overlapping":
+            raise NotImplementedError(
+                f"mode_model '{config.modes.mode_model}' is not implemented yet."
+            )
+
+        if config.modes.mode_boundary_conditions != "wrap_around":
+            raise NotImplementedError(
+                f"mode_boundary_conditions '{config.modes.mode_boundary_conditions}' is not "
+                "implemented yet."
+            )
+
+    def _validate_tile_and_bitmap_dimensions(self) -> None:
+        """Check that a tile fits inside the bitmap.
+
+        Raises:
+            ValueError: If a tile dimension is larger than the smallest bitmap
+                dimension.
+        """
+        smallest_bitmap_dim = min(
+            self.bitmap_dimensions.rows, self.bitmap_dimensions.cols
+        )
 
         if (
-            self.tile_dimensions.cols > min_bitmap_dim
-            or self.tile_dimensions.rows > min_bitmap_dim
+            self.tile_dimensions.rows > smallest_bitmap_dim
+            or self.tile_dimensions.cols > smallest_bitmap_dim
         ):
             raise ValueError(
-                f"tile_size ({self.tile_dimensions}) must be smaller than or equal to the "
-                f"minimum dimension of the bitmap (width: {self.bitmap_dimensions.cols}, "
-                f"height: {self.bitmap_dimensions.rows})"
+                f"tile_dim ({self.tile_dimensions.rows}) must be no larger than the smallest "
+                f"bitmap dimension (rows: {self.bitmap_dimensions.rows}, "
+                f"cols: {self.bitmap_dimensions.cols})."
             )
 
     def _extract_tile(self, x: int, y: int) -> Tile:
-        """Extract a tile from the bitmap at position (x, y) with wrapping.
-
-        Wrapping ensures that tiles can be extracted from the edges of the bitmap without going out
-        of bounds, treating the bitmap as a torus.
+        """Extract the tile whose top-left corner is at (x, y). The bitmap wraps around
+        its edges.
 
         Args:
-            x (int): The column index of the top-left corner of the tile.
-            y (int): The row index of the top-left corner of the tile.
+            x (int): Column of the top-left corner.
+            y (int): Row of the top-left corner.
 
         Returns:
-            tile (Tile): The extracted tile at position (x, y).
+            tile (Tile): The extracted tile.
         """
-        tile_value = tuple(
-            tuple(
-                self.bitmap[(y + i) % self.bitmap_dimensions.rows][
-                    (x + j) % self.bitmap_dimensions.cols
-                ]
-                for j in range(self.tile_dimensions.cols)
-            )
-            for i in range(self.tile_dimensions.rows)
-        )
+        tile_rows: list[tuple[str, ...]] = []
 
+        for row_offset in range(self.tile_dimensions.rows):
+            source_row = self.bitmap[(y + row_offset) % self.bitmap_dimensions.rows]
+            tile_row: list[str] = []
+
+            for col_offset in range(self.tile_dimensions.cols):
+                source_col = (x + col_offset) % self.bitmap_dimensions.cols
+                tile_row.append(source_row[source_col])
+
+            tile_rows.append(tuple(tile_row))
+
+        tile_value = tuple(tile_rows)
         tile = Tile(tile_value)
 
         return tile
 
     def _compute_tiles_and_weights(self) -> tuple[dict[Tile, float], list[Tile]]:
-        """Extract all tiles from the bitmap and compute their frequency weights.
-
-        Each tile's weight is its number of occurrences divided by the total number of tile
-        positions in the bitmap, giving a normalized frequency.
-
-        1. Count occurrences of each tile across all bitmap positions.
-        2. Collect all extracted tiles in order.
-        3. Normalise counts by total positions to produce frequency weights.
-        4. Return the weights dict and the full ordered tile list.
+        """Extract a tile at every bitmap position, and weight each unique tile by its
+        frequency.
 
         Returns:
-            result (tuple[dict[Tile, float], list[Tile]]): A tuple of the tile weights dict and the
-                ordered list of all extracted tiles.
+            result (tuple[dict[Tile, float], list[Tile]]): The weight of each unique
+                tile, which sum to 1, and every extracted tile in order.
         """
-        tile_count: Counter = Counter()
-        total_occurrences = self.bitmap_dimensions.rows * self.bitmap_dimensions.cols
-
-        all_tiles = []
+        tile_count: Counter[Tile] = Counter()
+        all_tiles: list[Tile] = []
+        total_positions = self.bitmap_dimensions.rows * self.bitmap_dimensions.cols
 
         for y in range(self.bitmap_dimensions.rows):
             for x in range(self.bitmap_dimensions.cols):
-                tile = self._extract_tile(x, y)
+                tile = self._extract_tile(x=x, y=y)
                 tile_count[tile] += 1
                 all_tiles.append(tile)
 
         tile_weights = {
-            tile: count / total_occurrences for tile, count in tile_count.items()
+            tile: count / total_positions for tile, count in tile_count.items()
         }
 
         return tile_weights, all_tiles
 
     def _compute_neighbors(self) -> defaultdict:
-        """Compute the set of valid neighboring tiles for each tile in each direction.
+        """Find, for each tile and direction, which tiles may sit in that direction.
 
-        Two tiles are valid neighbors in a direction if the overlapping slice of one tile matches
-        the overlapping slice of the other. For example, a tile is a valid upward neighbor if its
-        down slice matches the other tile's up slice.
+        Two tiles fit when the overlapping edges of their patterns are identical. For
+        example, a tile may sit above another when the other's top rows match this
+        tile's bottom rows.
 
         Returns:
-            neighbors (defaultdict): A nested defaultdict mapping each tile to a dict of directions,
-                each containing the set of valid neighbor tiles.
+            neighbors (defaultdict): Maps each tile to a dict of directions, each
+                holding the set of tiles that may sit in that direction.
         """
         neighbors: defaultdict = defaultdict(lambda: defaultdict(set))
 
@@ -172,138 +220,184 @@ class WaveFunctionCollapse:
         return neighbors
 
     def _initialize_grid(self) -> list[list[GridCell]]:
-        """Initialise the grid with a GridCell for each position, with all tiles as options.
+        """Create every grid cell, with all tiles as its options.
 
         Returns:
-            grid (list[list[GridCell]]): A 2D list of GridCell instances.
+            grid (list[list[GridCell]]): The output grid.
         """
-        grid = [
-            [
-                GridCell(
+        grid: list[list[GridCell]] = []
+
+        for _ in range(self.grid_dimensions.rows):
+            grid_row: list[GridCell] = []
+
+            for _ in range(self.grid_dimensions.cols):
+                cell = GridCell(
                     tile_set=self.tile_set.copy(),
                     tile_weights=self.tile_weights,
-                    color_mapping=self.color_mapping,
+                    inverted_color_mapping=self.inverted_color_mapping,
                     show_superposition=self.show_superposition,
                 )
-                for _ in range(self.grid_dimensions.cols)
-            ]
-            for _ in range(self.grid_dimensions.rows)
-        ]
+                grid_row.append(cell)
+
+            grid.append(grid_row)
 
         return grid
 
-    def propagate(self, y: int, x: int, recursion_depth: int) -> None:
-        """Recursively propagate tile constraints outward from cell (y, x).
+    def _valid_tiles_towards(self, y: int, x: int, direction: str) -> set[Tile]:
+        """Find the tiles that a cell allows in one direction.
 
-        Starting from a collapsed or updated cell, this method intersects each neighbor's tile
-        options with the set of tiles that are valid in that direction, then recurses into each
-        updated neighbor. Recursion depth controls how far constraints spread in a single
-        propagation pass.
-
-        1. Return immediately if the recursion depth is exhausted.
-        2. For each direction, compute the set of tiles valid in that direction.
-        3. Intersect the neighbor's options with the valid set.
-        4. Mark the neighbor as propagated and recompute its superposition tile.
-        5. Recurse into the neighbor with a decremented recursion depth.
-        6. Reset all propagated flags across the grid after the pass completes.
+        A collapsed cell allows the tiles that fit its tile. An open cell allows the
+        union over all its options.
 
         Args:
-            y (int): The row index of the source cell.
-            x (int): The column index of the source cell.
-            recursion_depth (int): The maximum number of recursive steps to take.
+            y (int): Row of the source cell.
+            x (int): Column of the source cell.
+            direction (str): The direction to look in.
+
+        Returns:
+            valid_tiles (set[Tile]): The tiles allowed in that direction.
+        """
+        source_cell = self.grid[y][x]
+
+        if source_cell.tile is not None:
+            valid_tiles = self.neighbors.get(source_cell.tile, {}).get(direction, set())
+            return valid_tiles
+
+        valid_tiles = set()
+        for option in source_cell.options:
+            valid_tiles |= self.neighbors.get(option, {}).get(direction, set())
+
+        return valid_tiles
+
+    def _clear_propagated_flags(self) -> None:
+        """Clear the propagated flag of every cell that was flagged during propagation."""
+        for cell_y, cell_x in self._flagged_cells:
+            self.grid[cell_y][cell_x].propagated = False
+
+        self._flagged_cells.clear()
+
+    def propagate(self, y: int, x: int, recursion_depth: int) -> None:
+        """Narrow the options of the open cells around (y, x), and keep going outward.
+
+        For each open neighbor, its options are intersected with the tiles that the
+        source allows in that direction. Each neighbor that changed is then propagated
+        from in turn, up to recursion_depth steps.
+
+        Args:
+            y (int): Row of the source cell.
+            x (int): Column of the source cell.
+            recursion_depth (int): How many more steps outward to go.
         """
         if recursion_depth <= 0:
             return
 
         for direction, (dy, dx) in self.directions.items():
-            ny, nx = y + dy, x + dx
+            neighbor_y = y + dy
+            neighbor_x = x + dx
 
-            if (
-                0 <= nx < self.grid_dimensions.cols
-                and 0 <= ny < self.grid_dimensions.rows
-                and not self.grid[ny][nx].collapsed
-                and not self.grid[ny][nx].propagated
+            if not (
+                0 <= neighbor_x < self.grid_dimensions.cols
+                and 0 <= neighbor_y < self.grid_dimensions.rows
             ):
-                if self.grid[y][x].tile:
-                    valid_tiles = self.neighbors.get(self.grid[y][x].tile, {}).get(
-                        direction, set()
-                    )
-                else:
-                    valid_tiles = set()
-                    for option in self.grid[y][x].options:
-                        # Set union operator — accumulate all tiles reachable in this direction.
-                        valid_tiles |= self.neighbors.get(option, {}).get(
-                            direction, set()
-                        )
+                continue
 
-                # Set intersection operator — eliminate options inconsistent with neighbors.
-                self.grid[ny][nx].options &= valid_tiles
-                self.grid[ny][nx].propagated = True
-                self.grid[ny][nx].compute_superposition_tile(
-                    tile_weights=self.tile_weights,
-                    color_mapping=self.color_mapping,
-                    show_superposition=self.show_superposition,
-                )
+            neighbor = self.grid[neighbor_y][neighbor_x]
+            if neighbor.collapsed or neighbor.propagated:
+                continue
 
-                self.propagate(ny, nx, recursion_depth - 1)
+            valid_tiles = self._valid_tiles_towards(y=y, x=x, direction=direction)
+            neighbor.options &= valid_tiles
+            neighbor.propagated = True
+            self._flagged_cells.add((neighbor_y, neighbor_x))
+            neighbor.compute_superposition_tile(
+                tile_weights=self.tile_weights,
+                inverted_color_mapping=self.inverted_color_mapping,
+                show_superposition=self.show_superposition,
+            )
 
-        for y in range(self.grid_dimensions.rows):
-            for x in range(self.grid_dimensions.cols):
-                self.grid[y][x].propagated = False
+            self.propagate(neighbor_y, neighbor_x, recursion_depth - 1)
 
-    def _collapse_grid_cell(self, y: int, x: int, tile: Tile) -> None:
-        """Collapse the grid cell at (y, x) to a single tile.
+        self._clear_propagated_flags()
+
+    def _find_min_entropy_cells(self) -> list[tuple[int, int]]:
+        """Find the uncollapsed cells with the fewest options.
+
+        Returns:
+            min_cells (list[tuple[int, int]]): The (row, column) of each uncollapsed
+                cell that ties for the fewest options. Empty once every cell has
+                collapsed.
+        """
+        min_entropy: int | None = None
+        min_cells: list[tuple[int, int]] = []
+
+        for cell_y in range(self.grid_dimensions.rows):
+            for cell_x in range(self.grid_dimensions.cols):
+                cell = self.grid[cell_y][cell_x]
+                if cell.collapsed:
+                    continue
+
+                entropy = len(cell.options)
+                if min_entropy is None or entropy < min_entropy:
+                    min_entropy = entropy
+                    min_cells = [(cell_y, cell_x)]
+                elif entropy == min_entropy:
+                    min_cells.append((cell_y, cell_x))
+
+        return min_cells
+
+    def _collapse_grid_cell(self, y: int, x: int) -> None:
+        """Collapse one cell to a tile, chosen at random by frequency.
 
         Args:
-            y (int): The row index of the cell to collapse.
-            x (int): The column index of the cell to collapse.
-            tile (Tile): The tile to collapse the cell to.
+            y (int): Row of the cell.
+            x (int): Column of the cell.
+
+        Raises:
+            ContradictionError: If the cell has no options left.
         """
-        self.grid[y][x].options = set()
-        self.grid[y][x].collapsed = True
-        self.grid[y][x].tile = tile
-        self.grid[y][x].superposition_tile = None
+        cell = self.grid[y][x]
+        options = list(cell.options)
+
+        if not options:
+            raise ContradictionError(row=y, col=x)
+
+        weights = [self.tile_weights[tile] for tile in options]
+        chosen_tile = self.rng.choices(options, weights=weights, k=1)[0]
+
+        cell.options = set()
+        cell.collapsed = True
+        cell.tile = chosen_tile
+        cell.superposition_tile = None
+
+    def _draw_step(self) -> bool:
+        """Draw the current grid, if there is a visualizer.
+
+        Returns:
+            keep_running (bool): False if the user asked to stop. True otherwise.
+        """
+        if self.visualizer is None:
+            return True
+
+        keep_running = self.visualizer.visualize(self.grid)
+
+        return keep_running
 
     def collapse_grid(self) -> None:
-        """Run the WFC algorithm until all grid cells are collapsed.
+        """Collapse every cell, one step at a time, until the grid is complete or the
+        user stops.
 
-        Iteratively selects the uncollapsed cell with the fewest remaining tile options (lowest
-        entropy), collapses it to a weighted random tile, and propagates the resulting constraints
-        to its neighbors.
-
-        1. Find all uncollapsed cells with the minimum number of remaining options.
-        2. If no uncollapsed cells remain, pause briefly and exit.
-        3. Select one minimum-entropy cell at random.
-        4. Collapse it to a tile chosen by weighted random selection.
-        5. Propagate constraints outward from the collapsed cell.
-        6. Render the current grid state via the visualizer.
+        Raises:
+            ContradictionError: If a cell is left with no tile that fits its neighbors.
         """
-        while True:
-            # Entropy pass — find all cells tied for the lowest number of options.
-            min_entropy = float("inf")
-            min_cells = []
+        keep_running = True
 
-            for cell_y in range(self.grid_dimensions.rows):
-                for cell_x in range(self.grid_dimensions.cols):
-                    if not self.grid[cell_y][cell_x].collapsed:
-                        options = self.grid[cell_y][cell_x].options
-
-                        if len(options) < min_entropy:
-                            min_entropy = len(options)
-                            min_cells = [(cell_y, cell_x)]
-                        elif len(options) == min_entropy:
-                            min_cells.append((cell_y, cell_x))
-
-            if not min_cells:
-                time.sleep(3)
+        while keep_running:
+            candidates = self._find_min_entropy_cells()
+            if not candidates:
                 break
 
-            # Collapse step — select and collapse a minimum-entropy cell.
-            y, x = rd.choice(min_cells)
-            choices = list(self.grid[y][x].options)
-            weights = [self.tile_weights[tile] for tile in choices]
-            chosen_tile = rd.choices(choices, weights)[0]
-            self._collapse_grid_cell(y, x, chosen_tile)
-            self.propagate(y, x, recursion_depth=self.recursion_depth)
+            y, x = self.rng.choice(candidates)
+            self._collapse_grid_cell(y=y, x=x)
+            self.propagate(y=y, x=x, recursion_depth=self.recursion_depth)
 
-            self.wfc_visualizer.visualize(self.grid)
+            keep_running = self._draw_step()

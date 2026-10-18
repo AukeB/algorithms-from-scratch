@@ -1,17 +1,17 @@
 general:
   grid_dim: 60 # Width and height of the output grid in tiles.
   tile_dim: 3 # Width and height of each tile in cells.
-  recursion_depth: 5 # Maximum number of cells outward that constraints propagate after each collapse step.
-  show_superposition: True # Whether to show the superposition color of uncollapsed cells.
-  grid_background_color: [50, 50, 50]  # RGB color used for uncollapsed cells when show_superposition is False.
+  recursion_depth: 5 # How many cells outward constraints propagate after each collapse.
+  show_superposition: true # Whether uncollapsed cells show their average colour.
+  grid_background_color: [50, 50, 50] # RGB colour of uncollapsed cells when show_superposition is false.
 
 bitmap: # Settings related to the bitmap.
-  input_file_name: network_2.xlsx # Input bitmap file name.
-  export: True # Whether the .xlsx bitmap will be exported as a .png.
+  input_file_name: network_2.xlsx # Input bitmap file name, in the bitmaps/input folder.
+  export: true # Whether the bitmap is exported as an image.
   export_file_format: .png # File format of the image export.
   cell_size: 30 # Cell width and height in pixels.
-  background_color: [0, 0, 0] # RGB-notation.
+  background_color: [0, 0, 0] # RGB colour of the exported image background.
 
 modes:
-  mode_model: overlapping # Options: ['overlapping', 'simple_tiled', 'tiled']
-  mode_boundary_conditions: wrap_around # Options: ['wrap_around', 'clamping', 'mirroring', 'noise']
+  mode_model: overlapping # Options: ["overlapping", "simple-tiled", "even-simpler-tiled"]. Only "overlapping" is implemented.
+  mode_boundary_conditions: wrap_around # Options: ["wrap_around", "clamping", "mirroring", "noise"]. Only "wrap_around" is implemented.

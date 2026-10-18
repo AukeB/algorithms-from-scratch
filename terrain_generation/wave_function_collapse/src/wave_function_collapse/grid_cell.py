@@ -1,40 +1,39 @@
-"""Module for the GridCell data structure used in the WFC algorithm."""
+"""Module for the GridCell data structure used by the Wave Function Collapse algorithm."""
 
-from src.wave_function_collapse.tile import Tile
-from src.wave_function_collapse.constants import RGBColor
+from wave_function_collapse.constants import RGBColor
+from wave_function_collapse.tile import Tile
 
 
 class GridCell:
-    """Represents a single cell in the WFC grid.
-
-    Each cell starts in a superposition of all possible tiles and progressively collapses to a
-    single tile as the WFC algorithm propagates constraints from neighboring cells. Before
-    collapsing, the cell maintains a weighted average of all its possible tiles as a visual
-    representation of its current state.
+    """One cell of the output grid. It holds the tiles it may still become, until it
+    collapses.
 
     Attributes:
-        options (set[TileValue]): The set of tiles this cell can still collapse to.
-        collapsed (bool): Whether the cell has been collapsed to a single tile.
-        tile (TileValue | None): The tile this cell collapsed to, or None if not yet collapsed.
-        superposition_tile (list[list[RGBColor]] | None): The weighted average RGB representation of
-            all current tile options, or None before it is computed.
-        propagated (bool): Whether this cell's constraints have been propagated to its neighbors in
-            the current iteration.
+        options (set[Tile]): The tiles this cell can still collapse to.
+        collapsed (bool): Whether the cell has collapsed to a single tile.
+        tile (Tile | None): The tile the cell collapsed to, or None before that.
+        superposition_tile (list[list[RGBColor]] | None): The weighted average colour of
+            the remaining options, for display before collapse. None when it is not
+            shown.
+        propagated (bool): Whether this cell was reached by the current propagation
+            pass.
     """
 
     def __init__(
         self,
         tile_set: set[Tile],
         tile_weights: dict[Tile, float],
-        color_mapping: dict[RGBColor, str],
+        inverted_color_mapping: dict[str, RGBColor],
         show_superposition: bool,
     ) -> None:
-        """Initialise the cell with all tiles as options and compute its superposition tile.
+        """Start with every tile as an option, and compute the superposition colour.
 
         Args:
-            tile_set (set[TileValue]): The set of all possible tiles this cell can collapse to.
-            tile_weights (dict[TileValue, float]): A dict mapping each tile to its frequency weight.
-            color_mapping (dict[RGBColor, str]): A dict mapping characters to RGB tuples.
+            tile_set (set[Tile]): All tiles the cell can start with.
+            tile_weights (dict[Tile, float]): The frequency weight of each tile.
+            inverted_color_mapping (dict[str, RGBColor]): Maps each character to its
+                colour.
+            show_superposition (bool): Whether to compute the superposition colour.
         """
         self.options: set[Tile] = tile_set
         self.collapsed: bool = False
@@ -44,18 +43,15 @@ class GridCell:
 
         self.compute_superposition_tile(
             tile_weights=tile_weights,
-            color_mapping=color_mapping,
+            inverted_color_mapping=inverted_color_mapping,
             show_superposition=show_superposition,
         )
 
     def __repr__(self) -> str:
-        """Return a string representation of the cell's collapsed state.
-
-        Called by repr() and used by debuggers and REPLs. Also serves as the fallback for print()
-        since this class does not define __str__.
+        """Return whether the cell has collapsed.
 
         Returns:
-            collapsed_str (str): The string representation of the collapsed flag.
+            collapsed_str (str): The string form of the collapsed flag.
         """
         collapsed_str = str(self.collapsed)
 
@@ -64,58 +60,55 @@ class GridCell:
     def compute_superposition_tile(
         self,
         tile_weights: dict[Tile, float],
-        color_mapping: dict[RGBColor, str],
+        inverted_color_mapping: dict[str, RGBColor],
         show_superposition: bool,
     ) -> None:
-        """Compute a weighted average RGB tile across all current tile options.
-
-        Each pixel in the resulting superposition tile is the weighted average of the corresponding
-        pixel across all possible tiles, giving a visual impression of the cell's current state of
-        uncertainty.
-
-        1. Invert the color mapping so characters can be looked up by RGB value.
-        2. Initialise an RGB matrix of zeros with the same dimensions as a tile.
-        3. Accumulate the weighted RGB contribution of each possible tile.
-        4. Divide each pixel by the total weight to produce the final average.
-        5. Store the result in self.superposition_tile.
+        """Compute the weighted average colour of the remaining options, pixel by pixel.
 
         Args:
-            tile_weights (dict[Tile, float]): A dict mapping each tile to its frequency weight.
-            color_mapping (dict[RGBColor, str]): A dict mapping RGB tuples to characters.
+            tile_weights (dict[Tile, float]): The frequency weight of each tile.
+            inverted_color_mapping (dict[str, RGBColor]): Maps each character to its
+                colour.
+            show_superposition (bool): If False, nothing is computed.
         """
         if not show_superposition:
             return
 
-        # Invert mapping so characters can be resolved back to RGB values.
-        inverted_color_mapping = {v: k for k, v in color_mapping.items()}
-        rgb_matrix: list[list[RGBColor]] = [
-            [(0, 0, 0)] * len(row) for row in next(iter(self.options)).value
+        if not self.options:
+            self.superposition_tile = None
+            return
+
+        sample_tile = next(iter(self.options))
+        tile_rows = len(sample_tile.value)
+        tile_cols = len(sample_tile.value[0])
+
+        weighted_sums = [
+            [[0.0, 0.0, 0.0] for _ in range(tile_cols)] for _ in range(tile_rows)
         ]
+        total_weight = 0.0
 
-        # Accumulate weighted RGB contributions across all possible tiles.
         for tile in self.options:
-            if tile in tile_weights:
-                weight = tile_weights[tile]
-                for row_index, tile_row in enumerate(tile.value):
-                    for col_index, tile_cell in enumerate(tile_row):
-                        r, g, b = inverted_color_mapping[tile_cell]
-                        r_sum, g_sum, b_sum = rgb_matrix[row_index][col_index]
-                        rgb_matrix[row_index][col_index] = (
-                            int(r_sum + r * weight),
-                            int(g_sum + g * weight),
-                            int(b_sum + b * weight),
-                        )
+            weight = tile_weights[tile]
+            total_weight += weight
 
-        # Normalise by total weight to produce the per-pixel average.
-        total_weight = sum(
-            tile_weights[tile] for tile in self.options if tile in tile_weights
-        )
-        for row_index in range(len(rgb_matrix)):
-            for col_index in range(len(rgb_matrix[row_index])):
-                r_sum, g_sum, b_sum = rgb_matrix[row_index][col_index]
-                r_avg = int(r_sum / total_weight)
-                g_avg = int(g_sum / total_weight)
-                b_avg = int(b_sum / total_weight)
-                rgb_matrix[row_index][col_index] = (r_avg, g_avg, b_avg)
+            for row_index, tile_row in enumerate(tile.value):
+                for col_index, tile_cell in enumerate(tile_row):
+                    red, green, blue = inverted_color_mapping[tile_cell]
+                    sums = weighted_sums[row_index][col_index]
+                    sums[0] += red * weight
+                    sums[1] += green * weight
+                    sums[2] += blue * weight
+
+        rgb_matrix: list[list[RGBColor]] = []
+        for sums_row in weighted_sums:
+            rgb_row: list[RGBColor] = []
+
+            for red_sum, green_sum, blue_sum in sums_row:
+                red = int(red_sum / total_weight)
+                green = int(green_sum / total_weight)
+                blue = int(blue_sum / total_weight)
+                rgb_row.append((red, green, blue))
+
+            rgb_matrix.append(rgb_row)
 
         self.superposition_tile = rgb_matrix
